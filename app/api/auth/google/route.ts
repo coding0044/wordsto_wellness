@@ -16,16 +16,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user already exists
+    // Check if user already exists with this email
     let user = await User.findOne({ email: email.toLowerCase() });
 
     if (user) {
-      // Update provider info if user exists
-      if (!user.provider) {
-        user.provider = provider;
-        user.image = image || user.image;
-        await user.save();
-      }
+      // User already exists - DO NOT create duplicate account
+      // Update provider and image to ensure Google account is linked
+      user.provider = provider;
+      user.image = image || user.image;
+      await user.save();
+      console.log(`✅ Existing user logged in with Google: ${email}`);
     } else {
       // Create new user with Google
       user = await User.create({
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
         role: 'user',
         // No password for OAuth users
       });
+      console.log(`✅ New user created with Google: ${email}`);
     }
 
     // Generate JWT token
