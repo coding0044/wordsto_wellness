@@ -141,7 +141,7 @@ export default function SettingsModal({ isOpen, onClose, user, onUserUpdate }) {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-id': user?.id,
+          'x-user-id': user?._id,
         },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
