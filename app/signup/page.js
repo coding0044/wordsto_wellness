@@ -64,6 +64,7 @@ export default function Signup() {
 
           if (res.ok) {
             localStorage.setItem('token', data.token);
+
             if (data.user.role === 'admin') {
               router.push('/admin-dashboard');
             } else {
@@ -133,8 +134,12 @@ export default function Signup() {
 
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center">
-            <svg className="w-7 h-7 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            <svg
+              className="w-7 h-7 text-sky-500"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
           </div>
         </div>
@@ -153,7 +158,18 @@ export default function Signup() {
 
           {error && (
             <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+              <p>{error}</p>
+
+              {error.includes('Please login') && (
+                <div className="mt-2">
+                  <Link
+                    href="/login"
+                    className="text-sky-600 font-medium underline"
+                  >
+                    Go to Login
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -170,7 +186,7 @@ export default function Signup() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400"
               />
             </div>
 
@@ -185,7 +201,7 @@ export default function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400"
               />
             </div>
 
@@ -202,13 +218,13 @@ export default function Signup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-sky-600"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -218,7 +234,7 @@ export default function Signup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl"
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
@@ -241,7 +257,7 @@ export default function Signup() {
             type="button"
             onClick={handleGoogleSignup}
             disabled={googleLoading}
-            className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl"
+            className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
           >
             {googleLoading ? 'Connecting...' : 'Continue with Google'}
           </button>

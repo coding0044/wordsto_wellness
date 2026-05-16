@@ -1,73 +1,66 @@
-import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
-import { generateToken } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { generateToken, setAuthCookie } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(req) {
   try {
     await dbConnect();
-    const { name, email, image, provider } = await req.json();
+
+    const { name, email } = await req.json();
 
     if (!email) {
       return NextResponse.json(
-        { message: 'Email is required' },
+        { success: false, message: 'Email is required' },
         { status: 400 }
       );
     }
 
-    // Check if user already exists with this email
-    let user = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
 
+    // ✅ CHECK IF USER ALREADY EXISTS
+    let user = await User.findOne({ email: normalizedEmail });
+
+    // 👉 If user already exists → show error (don't auto-login)
     if (user) {
-      // User already exists - DO NOT create duplicate account
-      // Update provider and image to ensure Google account is linked
-      user.provider = provider;
-      user.image = image || user.image;
-      await user.save();
-      console.log(`✅ Existing user logged in with Google: ${email}`);
-    } else {
-      // Create new user with Google
-      user = await User.create({
-        name,
-        email: email.toLowerCase(),
-        image,
-        provider,
-        role: 'user',
-        // No password for OAuth users
-      });
-      console.log(`✅ New user created with Google: ${email}`);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'This email already has an account. Please login with your password.',
+        },
+        { status: 400 }
+      );
     }
 
-    // Generate JWT token
-    const token = generateToken(user);
-
-    // Set cookie
-    const cookieStore = await cookies();
-    cookieStore.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+    // 👉 If NOT exists → create new user
+    user = await User.create({
+      name: name || 'Google User',
+      email: normalizedEmail,
+      password: null, // Google users don't need password
+      role: 'user',
     });
+
+    // ✅ Login new user
+    const token = generateToken(user._id.toString(), user.role);
+
+    await setAuthCookie(token);
 
     return NextResponse.json({
       success: true,
-      message: 'Login successful',
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        image: user.image,
       },
     });
-
   } catch (error) {
-    console.error('Google auth error:', error);
     return NextResponse.json(
-      { message: 'Authentication failed' },
+      {
+        success: false,
+        message: error.message || 'Google auth failed',
+      },
       { status: 500 }
     );
   }
