@@ -1,9 +1,9 @@
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
 import { generateToken, setAuthCookie } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
@@ -18,29 +18,30 @@ export async function POST(req) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // ✅ CHECK IF USER ALREADY EXISTS
+    // Check if user already exists
     let user = await User.findOne({ email: normalizedEmail });
 
-    // 👉 If user already exists → show error (don't auto-login)
+    // If already exists
     if (user) {
       return NextResponse.json(
         {
           success: false,
-          message: 'This email already has an account. Please login with your password.',
+          message:
+            'This email already has an account. Please login with your password.',
         },
         { status: 400 }
       );
     }
 
-    // 👉 If NOT exists → create new user
+    // Create new Google user
     user = await User.create({
       name: name || 'Google User',
       email: normalizedEmail,
-      password: null, // Google users don't need password
+      password: null,
       role: 'user',
     });
 
-    // ✅ Login new user
+    // Generate token
     const token = generateToken(user._id.toString(), user.role);
 
     await setAuthCookie(token);
@@ -55,7 +56,7 @@ export async function POST(req) {
         role: user.role,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
