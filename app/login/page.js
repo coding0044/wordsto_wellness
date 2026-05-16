@@ -56,7 +56,10 @@ export default function Login() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(event.data.user),
+            body: JSON.stringify({
+              ...event.data.user,
+              isLogin: true,
+            }),
           });
 
           const data = await res.json();

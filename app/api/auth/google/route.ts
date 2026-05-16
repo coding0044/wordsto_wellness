@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
-    const { name, email } = await req.json();
+    const { name, email, isLogin } = await req.json();
 
     if (!email) {
       return NextResponse.json(
@@ -21,19 +21,37 @@ export async function POST(req: NextRequest) {
     // Check if user already exists
     let user = await User.findOne({ email: normalizedEmail });
 
-    // If already exists
-    if (user) {
+    // SIGNUP: Block if user exists
+    if (!isLogin && user) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            'This email already has an account. Please login with your password.',
+          message: 'Account already exists. Please login with your password.',
         },
-        { status: 400 }
+        { status: 409 }
       );
     }
 
-    // Create new Google user
+    // LOGIN: Allow existing user
+    if (isLogin && user) {
+      // Generate token for existing user
+      const token = generateToken(user._id.toString(), user.role);
+      await setAuthCookie(token);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Login successful',
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    }
+
+    // SIGNUP: Create new user
     user = await User.create({
       name: name || 'Google User',
       email: normalizedEmail,
