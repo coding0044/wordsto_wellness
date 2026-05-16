@@ -32,9 +32,23 @@ export function verifyToken(token) {
   }
 }
 
-export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+export async function getCurrentUser(req) {
+  let token = null;
+  
+  // Try to get token from Authorization header first (for client-side requests)
+  if (req?.headers?.get('authorization')) {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
+  // If not in header, try to get from cookies (for server-side requests)
+  if (!token) {
+    const cookieStore = await cookies();
+    token = cookieStore.get('token')?.value;
+  }
+  
   if (!token) return null;
   
   const decoded = verifyToken(token);

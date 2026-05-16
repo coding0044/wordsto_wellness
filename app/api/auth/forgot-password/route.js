@@ -124,6 +124,15 @@ export async function POST(req) {
       console.log(`🔑 OTP: ${otp}`);
     } catch (emailError) {
       console.error('Email sending failed:', emailError?.message || emailError, emailError?.stack || '');
+      // In development, return OTP in response if email fails
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔧 Development mode: OTP not sent via email, returning in response`);
+        return NextResponse.json({ 
+          success: true, 
+          message: 'OTP generated (development mode - check console)',
+          otp: otp, // Only in development
+        });
+      }
       return NextResponse.json(
         { message: 'Failed to send OTP. Please try again.' },
         { status: 500 }

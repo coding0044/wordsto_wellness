@@ -7,6 +7,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [devOtp, setDevOtp] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -25,6 +26,10 @@ export default function ForgotPassword() {
 
       if (res.ok) {
         sessionStorage.setItem('resetEmail', email);
+        if (data.otp) {
+          sessionStorage.setItem('devOtp', data.otp);
+          setDevOtp(data.otp);
+        }
         router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
       } else {
         setError(data.message);

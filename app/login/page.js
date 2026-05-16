@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function Signup() {
-  const [name, setName] = useState('');
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +14,7 @@ export default function Signup() {
 
   const router = useRouter();
 
-  const handleGoogleSignup = () => {
+  const handleGoogleLogin = () => {
     setGoogleLoading(true);
 
     const width = 500;
@@ -39,7 +38,7 @@ export default function Signup() {
 
     const popup = window.open(
       authUrl,
-      'Google Sign Up',
+      'Google Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
 
@@ -63,12 +62,17 @@ export default function Signup() {
           const data = await res.json();
 
           if (res.ok) {
-            router.push('/dashboard');
+            localStorage.setItem('token', data.token);
+            if (data.user.role === 'admin') {
+              router.push('/admin-dashboard');
+            } else {
+              router.push('/dashboard');
+            }
           } else {
-            setError(data.message || 'Google signup failed');
+            setError(data.message || 'Google login failed');
           }
         } catch (error) {
-          setError('Something went wrong with Google signup');
+          setError('Something went wrong with Google login');
         } finally {
           setGoogleLoading(false);
         }
@@ -95,23 +99,26 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
           email,
           password,
-          role: 'user',
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        router.push('/dashboard');
+        localStorage.setItem('token', data.token);
+        if (data.user.role === 'admin') {
+          router.push('/admin-dashboard');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         setError(data.message);
       }
@@ -136,11 +143,11 @@ export default function Signup() {
 
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-            Create Account
+            Sign In
           </h1>
 
           <p className="text-sm text-gray-500">
-            Join Wordstowellness
+            Welcome back to Wordstowellness
           </p>
         </div>
 
@@ -153,21 +160,6 @@ export default function Signup() {
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-              />
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +185,6 @@ export default function Signup() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -210,12 +201,21 @@ export default function Signup() {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-sky-600 hover:text-sky-700"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
               className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
           </form>
@@ -227,14 +227,14 @@ export default function Signup() {
 
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">
-                Or sign up with
+                Or sign in with
               </span>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={handleGoogleSignup}
+            onClick={handleGoogleLogin}
             disabled={googleLoading}
             className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl"
           >
@@ -243,13 +243,13 @@ export default function Signup() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Don't have an account?{' '}
 
               <Link
-                href="/login"
+                href="/signup"
                 className="text-sky-600 font-medium"
               >
-                Sign in
+                Sign up
               </Link>
             </p>
           </div>

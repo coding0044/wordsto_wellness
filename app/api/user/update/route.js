@@ -7,7 +7,7 @@ export async function PUT(req) {
   try {
     await dbConnect();
     
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUser(req);
     if (!currentUser) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
