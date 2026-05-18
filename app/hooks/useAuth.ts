@@ -198,3 +198,29 @@ export const useLogout = () => {
     router.push('/login');
   };
 };
+
+// Get all users (admin only)
+export const useUsers = () => {
+  return useQuery<User[], Error>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      
+      const response = await fetch('/api/user/all', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      
+      const data = await response.json();
+      return data.users || [];
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};

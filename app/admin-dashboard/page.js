@@ -1,89 +1,97 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardShell from '@/components/DashboardShell';
-import { useCurrentUser } from '@/hooks/useAuth';
+import { useCurrentUser, useUsers } from '@/hooks/useAuth';
 import { useCategories, useSubcategories, useTopics, useLetters } from '@/hooks/useContent';
-import { useCreateCategory, useUpdateCategory, useDeleteCategory, useCreateSubcategory, useCreateTopic, useCreateLetter } from '@/hooks/useContent';
+import {
+  useCreateCategory, useUpdateCategory, useDeleteCategory,
+  useCreateSubcategory, useUpdateSubcategory, useDeleteSubcategory,
+  useCreateTopic, useUpdateTopic, useDeleteTopic,
+  useCreateLetter, useUpdateLetter, useDeleteLetter
+} from '@/hooks/useContent';
+import {
+  LayoutDashboard, FileText, Users, FolderTree, LogOut,
+  Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,
+  Layers, BookOpen, ChevronRight, TrendingUp, Bell
+} from 'lucide-react';
+
+const NAV_ITEMS = [
+  { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
+  { id: 'categories',    label: 'Categories',     icon: Layers },
+  { id: 'subcategories', label: 'Subcategories',  icon: FolderTree },
+  { id: 'topics',        label: 'Topics',         icon: BookOpen },
+  { id: 'letters',       label: 'Letters',        icon: FileText },
+  { id: 'users',         label: 'Users',          icon: Users },
+];
+
+const ACCENT = {
+  categories:    { from: '#6366f1', to: '#8b5cf6', light: '#eef2ff', text: '#4338ca', ring: '#c7d2fe' },
+  subcategories: { from: '#10b981', to: '#059669', light: '#ecfdf5', text: '#047857', ring: '#a7f3d0' },
+  topics:        { from: '#0ea5e9', to: '#2563eb', light: '#f0f9ff', text: '#0369a1', ring: '#bae6fd' },
+  letters:       { from: '#f59e0b', to: '#ef4444', light: '#fffbeb', text: '#b45309', ring: '#fde68a' },
+  users:         { from: '#ec4899', to: '#a855f7', light: '#fdf4ff', text: '#9333ea', ring: '#e9d5ff' },
+};
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('categories');
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({});
-  const [formType, setFormType] = useState('');
+  const [activeTab, setActiveTab]   = useState('overview');
+  const [showForm, setShowForm]     = useState(false);
+  const [formData, setFormData]     = useState({});
+  const [formType, setFormType]     = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isClient, setIsClient] = useState(false);
+  const [isClient, setIsClient]     = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notification, setNotification] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
-  // Use our custom hooks
-  const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const { data: userData,       isLoading: userLoading,        error: userError }    = useCurrentUser();
+  const { data: usersData,      isLoading: usersLoading }      = useUsers();
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const { data: subcategoriesData, isLoading: subcategoriesLoading } = useSubcategories();
-  const { data: topicsData, isLoading: topicsLoading } = useTopics();
-  const { data: lettersData, isLoading: lettersLoading } = useLetters();
+  const { data: topicsData,     isLoading: topicsLoading }     = useTopics();
+  const { data: lettersData,    isLoading: lettersLoading }    = useLetters();
 
-  const user = userData;
-  const categories = categoriesData || [];
+  const user         = userData;
+  const users        = usersData        || [];
+  const categories   = categoriesData   || [];
   const subcategories = subcategoriesData || [];
-  const topics = topicsData || [];
-  const letters = lettersData || [];
+  const topics       = topicsData       || [];
+  const letters      = lettersData      || [];
 
-  // Mutation hooks
-  const createCategoryMutation = useCreateCategory();
-  const updateCategoryMutation = useUpdateCategory();
-  const deleteCategoryMutation = useDeleteCategory();
+  const createCategoryMutation    = useCreateCategory();
+  const updateCategoryMutation    = useUpdateCategory();
+  const deleteCategoryMutation    = useDeleteCategory();
   const createSubcategoryMutation = useCreateSubcategory();
-  const createTopicMutation = useCreateTopic();
-  const createLetterMutation = useCreateLetter();
+  const updateSubcategoryMutation = useUpdateSubcategory();
+  const deleteSubcategoryMutation = useDeleteSubcategory();
+  const createTopicMutation       = useCreateTopic();
+  const updateTopicMutation       = useUpdateTopic();
+  const deleteTopicMutation       = useDeleteTopic();
+  const createLetterMutation      = useCreateLetter();
+  const updateLetterMutation      = useUpdateLetter();
+  const deleteLetterMutation      = useDeleteLetter();
 
-  const checkAdminAndFetch = useCallback(async () => {
-    if (userError) {
-      router.push('/login');
-      return;
-    }
-    // Only redirect if user is loaded (not undefined) and role is not admin
-    if (user && user.role !== 'admin') {
-      router.push('/dashboard');
-      return;
-    }
+  const checkAdmin = useCallback(() => {
+    if (userError) { router.push('/login'); return; }
+    if (user && user.role !== 'admin') { router.push('/admin-dashboard'); }
   }, [userError, router, user]);
 
-  useEffect(() => {
-    checkAdminAndFetch();
-  }, [checkAdminAndFetch]);
+  useEffect(() => { checkAdmin(); }, [checkAdmin]);
 
-  // Logout handler
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       localStorage.removeItem('token');
       router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    } catch (e) { console.error(e); }
   };
-
-  if (!isClient || userLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="space-y-6">
-          <div className="animate-spin rounded-full h-32 w-32 border-4 border-indigo-200 border-t-sky-500 mx-auto"></div>
-          <p className="text-gray-900 text-center text-lg font-medium">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-
 
   const openForm = (type, item = null) => {
     setFormType(type);
@@ -92,6 +100,9 @@ export default function AdminDashboard() {
       setFormData({
         id: item._id,
         name: item.name || '',
+        email: item.email || '',
+        role: item.role || 'user',
+        password: '',
         description: item.description || '',
         category: item.category?._id || item.category || '',
         subcategory: item.subcategory?._id || item.subcategory || '',
@@ -106,242 +117,233 @@ export default function AdminDashboard() {
     setShowForm(true);
   };
 
-  const closeForm = () => {
-    setShowForm(false);
-    setFormData({});
-    setFormType('');
-    setEditingItem(null);
+  const closeForm = () => { setShowForm(false); setFormData({}); setFormType(''); setEditingItem(null); };
+
+  const handleDelete = (type, id) => {
+    if (!confirm(`Delete this ${type}?`)) return;
+    if (type === 'user') {
+      fetch(`/api/auth/admin/users?id=${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(() => showNotification('User deleted successfully'))
+        .catch(error => showNotification(error.message || 'Failed to delete user', 'error'));
+    } else {
+      const map = { category: deleteCategoryMutation, subcategory: deleteSubcategoryMutation, topic: deleteTopicMutation, letter: deleteLetterMutation };
+      map[type]?.mutate(id, {
+        onSuccess: () => showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`),
+        onError: (error) => showNotification(error.message || `Failed to delete ${type}`, 'error')
+      });
+    }
   };
 
-  const handleDelete = async (type, id) => {
-    if (!confirm(`Are you sure you want to delete this ${type}?`)) {
-      return;
-    }
-    
-    if (type === 'category') {
-      deleteCategoryMutation.mutate(id);
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!isClient) return;
-    
-    if (formType === 'category') {
+    if (formType === 'user') {
+      const d = { name: formData.name, email: formData.email, role: formData.role };
+      if (formData.password) d.password = formData.password;
       if (editingItem) {
-        updateCategoryMutation.mutate({
-          id: editingItem._id,
-          data: {
-            name: formData.name,
-            description: formData.description
-          }
+        fetch(`/api/auth/admin/users?id=${editingItem._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(d)
+        })
+          .then(res => res.json())
+          .then(() => { showNotification('User updated successfully'); closeForm(); })
+          .catch(error => showNotification(error.message || 'Failed to update user', 'error'));
+      } else {
+        fetch('/api/auth/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(d)
+        })
+          .then(res => res.json())
+          .then(() => { showNotification('User created successfully'); closeForm(); })
+          .catch(error => showNotification(error.message || 'Failed to create user', 'error'));
+      }
+    } else if (formType === 'category') {
+      const d = { name: formData.name, description: formData.description };
+      if (editingItem) {
+        updateCategoryMutation.mutate({ id: editingItem._id, data: d }, {
+          onSuccess: () => { showNotification('Category updated successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to update category', 'error')
         });
       } else {
-        createCategoryMutation.mutate({
-          name: formData.name,
-          description: formData.description
+        createCategoryMutation.mutate(d, {
+          onSuccess: () => { showNotification('Category created successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to create category', 'error')
         });
       }
     } else if (formType === 'subcategory') {
-      createSubcategoryMutation.mutate({
-        name: formData.name,
-        description: formData.description,
-        category: formData.category
-      });
+      const d = { name: formData.name, description: formData.description, category: formData.category };
+      if (editingItem) {
+        updateSubcategoryMutation.mutate({ id: editingItem._id, data: d }, {
+          onSuccess: () => { showNotification('Subcategory updated successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to update subcategory', 'error')
+        });
+      } else {
+        createSubcategoryMutation.mutate(d, {
+          onSuccess: () => { showNotification('Subcategory created successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to create subcategory', 'error')
+        });
+      }
     } else if (formType === 'topic') {
-      createTopicMutation.mutate({
-        name: formData.name,
-        description: formData.description,
-        subcategory: formData.subcategory
-      });
+      const d = { name: formData.name, description: formData.description, subcategory: formData.subcategory };
+      if (editingItem) {
+        updateTopicMutation.mutate({ id: editingItem._id, data: d }, {
+          onSuccess: () => { showNotification('Topic updated successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to update topic', 'error')
+        });
+      } else {
+        createTopicMutation.mutate(d, {
+          onSuccess: () => { showNotification('Topic created successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to create topic', 'error')
+        });
+      }
     } else if (formType === 'letter') {
-      createLetterMutation.mutate({
-        title: formData.title,
-        content: formData.content,
-        topic: formData.topic
-      });
+      const d = { title: formData.title, content: formData.content, topic: formData.topic };
+      if (editingItem) {
+        updateLetterMutation.mutate({ id: editingItem._id, data: d }, {
+          onSuccess: () => { showNotification('Letter updated successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to update letter', 'error')
+        });
+      } else {
+        createLetterMutation.mutate(d, {
+          onSuccess: () => { showNotification('Letter created successfully'); closeForm(); },
+          onError: (error) => showNotification(error.message || 'Failed to create letter', 'error')
+        });
+      }
     }
-    closeForm();
   };
 
+  const filtered = {
+    categories:    categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    subcategories: subcategories.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    topics:        topics.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    letters:       letters.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase())),
+  };
+
+  if (!isClient || userLoading) return (
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ textAlign:'center' }}>
+        <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center" style={{ margin:'0 auto 24px' }}>
+          <svg
+            className="w-7 h-7 text-sky-500"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+        </div>
+        <p style={{ color:'rgba(255,255,255,0.7)', fontSize:16, fontFamily:'system-ui' }}>Loading dashboard…</p>
+      </div>
+    </div>
+  );
+  if (!user) return null;
+
+  const accentColor = ACCENT[activeTab] || ACCENT.categories;
+
+  /* ─── FORM MODAL ─── */
   const renderForm = () => {
     if (!showForm) return null;
-
+    const ac = ACCENT[formType] || ACCENT.categories;
+    const inputCls = {
+      width:'100%', padding:'12px 16px', border:'1.5px solid #e2e8f0',
+      borderRadius:12, fontSize:14, fontFamily:'system-ui', outline:'none',
+      transition:'border-color 0.2s, box-shadow 0.2s', background:'#fff', color:'#1e293b'
+    };
     return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent capitalize">
-              {editingItem ? `Edit ${formType}` : `Create New ${formType}`}
-            </h3>
-            <button
-              onClick={closeForm}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              ✕
+      <div style={{ position:'fixed', inset:0, background:'rgba(15,12,41,0.75)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16 }}>
+        <div style={{ background:'#fff', borderRadius:24, padding:36, maxWidth:560, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,0.25)', border:'1px solid rgba(255,255,255,0.8)' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
+            <div>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:`linear-gradient(135deg,${ac.from},${ac.to})`, display:'inline-block', marginRight:10, verticalAlign:'middle' }} />
+              <span style={{ fontSize:20, fontWeight:700, color:'#0f172a', fontFamily:'system-ui' }}>
+                {editingItem ? `Edit ${formType}` : `New ${formType}`}
+              </span>
+            </div>
+            <button onClick={closeForm} style={{ width:36, height:36, borderRadius:10, border:'1px solid #e2e8f0', background:'#f8fafc', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <X size={16} color="#64748b" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {formType === 'category' && (
+          <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            {formType === 'user' && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">📚 Category Name *</label>
-                  <input
-                    type="text"
-                    placeholder="Enter category name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200/50 outline-none transition-all"
-                    required
-                  />
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Name *</label>
+                  <input type="text" placeholder="Enter user name" value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">📝 Description</label>
-                  <textarea
-                    placeholder="Enter description (optional)"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200/50 outline-none transition-all"
-                    rows="3"
-                  />
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Email *</label>
+                  <input type="email" placeholder="Enter email address" value={formData.email||''} onChange={e=>setFormData({...formData,email:e.target.value})} required style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>{editingItem ? 'New Password (optional)' : 'Password *'}</label>
+                  <input type="password" placeholder={editingItem ? 'Leave blank to keep current password' : 'Enter password'} value={formData.password||''} onChange={e=>setFormData({...formData,password:e.target.value})} required={!editingItem} style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Role *</label>
+                  <select value={formData.role||'user'} onChange={e=>setFormData({...formData,role:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
               </>
             )}
-
             {formType === 'subcategory' && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Select Category *</label>
-                  <select
-                    value={formData.category || ''}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-200/50 outline-none transition-all"
-                    required
-                  >
-                    <option value="">Choose a category...</option>
-                    {categories.map(cat => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Subcategory Name *</label>
-                  <input
-                    type="text"
-                    placeholder="Enter subcategory name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-200/50 outline-none transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Description</label>
-                  <textarea
-                    placeholder="Enter description (optional)"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-200/50 outline-none transition-all"
-                    rows="3"
-                  />
-                </div>
-              </>
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Category *</label>
+                <select value={formData.category||''} onChange={e=>setFormData({...formData,category:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                  <option value="">Choose a category…</option>
+                  {categories.map(c=><option key={c._id} value={c._id}>{c.name}</option>)}
+                </select>
+              </div>
             )}
-
             {formType === 'topic' && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Select Subcategory *</label>
-                  <select
-                    value={formData.subcategory || ''}
-                    onChange={(e) => setFormData({...formData, subcategory: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-200/50 outline-none transition-all"
-                    required
-                  >
-                    <option value="">Choose a subcategory...</option>
-                    {subcategories.map(sub => (
-                      <option key={sub._id} value={sub._id}>{sub.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Topic Name *</label>
-                  <input
-                    type="text"
-                    placeholder="Enter topic name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-200/50 outline-none transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Description</label>
-                  <textarea
-                    placeholder="Enter description (optional)"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-200/50 outline-none transition-all"
-                    rows="3"
-                  />
-                </div>
-              </>
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Subcategory *</label>
+                <select value={formData.subcategory||''} onChange={e=>setFormData({...formData,subcategory:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                  <option value="">Choose a subcategory…</option>
+                  {subcategories.map(s=><option key={s._id} value={s._id}>{s.name}</option>)}
+                </select>
+              </div>
             )}
-
             {formType === 'letter' && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Select Topic *</label>
-                  <select
-                    value={formData.topic || ''}
-                    onChange={(e) => setFormData({...formData, topic: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200/50 outline-none transition-all"
-                    required
-                  >
-                    <option value="">Choose a topic...</option>
-                    {topics.map(topic => (
-                      <option key={topic._id} value={topic._id}>{topic.name}</option>
-                    ))}
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Topic *</label>
+                  <select value={formData.topic||''} onChange={e=>setFormData({...formData,topic:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                    <option value="">Choose a topic…</option>
+                    {topics.map(t=><option key={t._id} value={t._id}>{t.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Letter Title *</label>
-                  <input
-                    type="text"
-                    placeholder="Enter letter title"
-                    value={formData.title || ''}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200/50 outline-none transition-all"
-                    required
-                  />
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Title *</label>
+                  <input type="text" placeholder="Enter letter title" value={formData.title||''} onChange={e=>setFormData({...formData,title:e.target.value})} required style={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Letter Content *</label>
-                  <textarea
-                    placeholder="Enter letter content"
-                    value={formData.content || ''}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200/50 outline-none transition-all"
-                    rows="6"
-                    required
-                  />
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Content *</label>
+                  <textarea placeholder="Write the letter content…" value={formData.content||''} onChange={e=>setFormData({...formData,content:e.target.value})} required rows={6} style={{...inputCls,resize:'vertical',lineHeight:1.6}} />
                 </div>
               </>
             )}
-
-            <div className="flex gap-3 pt-6">
-              <button
-                type="submit"
-                className="flex-1 bg-white text-gray-900 py-3 px-4 rounded-xl hover:bg-gray-100 transition-all font-semibold"
-              >
-                {editingItem ? 'Update' : 'Create'}
+            {formType !== 'letter' && formType !== 'user' && (
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>{formType === 'category' ? 'Category' : formType === 'subcategory' ? 'Subcategory' : 'Topic'} Name *</label>
+                <input type="text" placeholder={`Enter ${formType} name`} value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
+              </div>
+            )}
+            {formType !== 'letter' && formType !== 'user' && (
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Description</label>
+                <textarea placeholder="Optional description…" value={formData.description||''} onChange={e=>setFormData({...formData,description:e.target.value})} rows={3} style={{...inputCls,resize:'vertical'}} />
+              </div>
+            )}
+            <div style={{ display:'flex', gap:12, paddingTop:8 }}>
+              <button type="submit" style={{ flex:1, padding:'13px 20px', background:`linear-gradient(135deg,${ac.from},${ac.to})`, color:'#fff', border:'none', borderRadius:12, fontSize:15, fontWeight:700, cursor:'pointer', fontFamily:'system-ui', letterSpacing:0.3, boxShadow:`0 8px 24px ${ac.from}40` }}>
+                {editingItem ? 'Save Changes' : 'Create'}
               </button>
-              <button
-                type="button"
-                onClick={closeForm}
-                className="flex-1 bg-white text-gray-900 py-3 px-4 rounded-xl hover:bg-gray-100 transition-all font-semibold"
-              >
+              <button type="button" onClick={closeForm} style={{ flex:1, padding:'13px 20px', background:'#f1f5f9', color:'#64748b', border:'none', borderRadius:12, fontSize:15, fontWeight:600, cursor:'pointer', fontFamily:'system-ui' }}>
                 Cancel
               </button>
             </div>
@@ -351,274 +353,458 @@ export default function AdminDashboard() {
     );
   };
 
-  const filteredCategories = categories.filter(cat => 
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  /* ─── TABLE HELPER ─── */
+  const Table = ({ cols, rows, loading, icon: Icon, empty }) => (
+    <div style={{ background:'#fff', borderRadius:20, border:'1px solid #e2e8f0', overflow:'hidden', boxShadow:'0 4px 24px rgba(15,23,42,0.06)' }}>
+      {loading ? (
+        <div style={{ padding:48, textAlign:'center' }}>
+          <div style={{ width:40, height:40, border:'3px solid #e2e8f0', borderTop:`3px solid ${accentColor.from}`, borderRadius:'50%', animation:'spin 1s linear infinite', margin:'0 auto 16px' }} />
+          <p style={{ color:'#94a3b8', fontFamily:'system-ui', fontSize:14 }}>Loading…</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div style={{ padding:64, textAlign:'center' }}>
+          <div style={{ width:64, height:64, borderRadius:20, background:accentColor.light, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+            <Icon size={28} color={accentColor.from} />
+          </div>
+          <p style={{ color:'#94a3b8', fontFamily:'system-ui', fontSize:15, fontWeight:500 }}>{empty}</p>
+        </div>
+      ) : (
+        <div style={{ overflowX:'auto' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <thead>
+              <tr style={{ background:'#f8fafc', borderBottom:'1px solid #e2e8f0' }}>
+                {cols.map(c=>(
+                  <th key={c} style={{ padding:'14px 20px', textAlign:'left', fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'system-ui', whiteSpace:'nowrap' }}>{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 
-  const filteredSubcategories = subcategories.filter(sub => 
-    sub.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const tdStyle = { padding:'16px 20px', borderBottom:'1px solid #f1f5f9', fontSize:14, color:'#334155', fontFamily:'system-ui', verticalAlign:'middle' };
+  const avatarStyle = (from, to) => ({ width:38, height:38, borderRadius:12, background:`linear-gradient(135deg,${from},${to})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 });
+  const badgeStyle = (bg, text) => ({ display:'inline-flex', padding:'4px 12px', borderRadius:20, fontSize:12, fontWeight:600, background:bg, color:text });
+  const actionBtnStyle = (hoverBg) => ({ padding:8, borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s' });
 
-  const filteredTopics = topics.filter(topic => 
-    topic.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredLetters = letters.filter(letter => 
-    letter.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  /* ─── STATS DATA ─── */
+  const stats = [
+    { label:'Total Users',   value: users.length,       icon: Users,      from:'#818cf8', to:'#6366f1', light:'#eef2ff', text:'#4338ca' },
+    { label:'Total Letters', value: letters.length,     icon: FileText,   from:'#34d399', to:'#10b981', light:'#ecfdf5', text:'#047857' },
+    { label:'Categories',    value: categories.length,  icon: Layers,     from:'#60a5fa', to:'#3b82f6', light:'#eff6ff', text:'#1d4ed8' },
+    { label:'Topics',        value: topics.length,      icon: BookOpen,   from:'#fb923c', to:'#f97316', light:'#fff7ed', text:'#c2410c' },
+  ];
 
   return (
     <>
-      {renderForm()}
-      <DashboardShell title="Admin Control Center" subtitle="Manage categories, subcategories, topics and letters">
-        <div className="space-y-8">
-          {/* Header with Welcome & Logout */}
-          <div className="relative overflow-hidden rounded-2xl bg-white p-8 text-gray-900">
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Welcome back, <span className="text-gray-900">{user?.name}!</span> 👑</h1>
-                <p className="text-gray-600 text-lg">You have full control over content management</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Logout
-              </button>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Categories', value: categories.length, color: 'red', icon: '📚' },
-              { label: 'Subcategories', value: subcategories.length, color: 'green', icon: '📂' },
-              { label: 'Topics', value: topics.length, color: 'purple', icon: '📋' },
-              { label: 'Letters', value: letters.length, color: 'amber', icon: '📄' }
-            ].map((stat, idx) => (
-              <div key={idx} className={`bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg`}>
-                <div className="text-4xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-sm text-gray-600 font-semibold flex items-center gap-2">
-                  <span>{stat.icon}</span>
-                  <span>{stat.label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-modern block w-full pl-12 pr-5 py-4 text-lg text-gray-900 placeholder-gray-400"
-            />
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="bg-white rounded-2xl p-2 border border-gray-200 shadow-lg">
-            <nav className="flex space-x-1">
-              {[
-                { id: 'categories', label: 'Categories', count: categories.length, color: 'error' },
-                { id: 'subcategories', label: 'Subcategories', count: subcategories.length, color: 'success' },
-                { id: 'topics', label: 'Topics', count: topics.length, color: 'accent' },
-                { id: 'letters', label: 'Letters', count: letters.length, color: 'warning' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`group relative flex-1 rounded-xl px-4 py-3 font-medium text-sm transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? `bg-gray-100 text-gray-900 shadow-lg`
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="relative z-10 flex items-center justify-center space-x-2">
-                    <span>{tab.label}</span>
-                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                      activeTab === tab.id ? 'bg-gray-200 text-gray-900' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Content Area */}
-          <div className="space-y-6">
-            {/* Categories */}
-            {activeTab === 'categories' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>📚</span> Categories ({filteredCategories.length})
-                  </h2>
-                  <button
-                    onClick={() => openForm('category')}
-                    className="bg-white text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-100 transition-all font-semibold flex items-center gap-2"
-                  >
-                    <span>➕</span> Add Category
-                  </button>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredCategories.map(cat => (
-                    <div key={cat._id} className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-red-400 hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 shadow-lg group">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-orange-600 flex items-center justify-center text-white text-2xl shadow-lg group-hover:scale-110 transition-transform">
-                          📚
-                        </div>
-                        <button
-                          onClick={() => handleDelete('category', cat._id)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">{cat.name}</h3>
-                      {cat.description && <p className="text-gray-600 text-sm mb-4">{cat.description}</p>}
-                      <div className="pt-4 border-t border-gray-100">
-                        <button
-                          onClick={() => openForm('category', cat)}
-                          className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
-                        >
-                          ✏️ Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Subcategories */}
-            {activeTab === 'subcategories' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>📂</span> Subcategories ({filteredSubcategories.length})
-                  </h2>
-                  <button
-                    onClick={() => openForm('subcategory')}
-                    className="bg-white text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-100 transition-all font-semibold flex items-center gap-2"
-                  >
-                    <span>➕</span> Add Subcategory
-                  </button>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredSubcategories.map(sub => (
-                    <div key={sub._id} className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 transition-all duration-300 shadow-lg group">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-2xl shadow-lg group-hover:scale-110 transition-transform">
-                          📂
-                        </div>
-                        <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">{sub.category?.name}</span>
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">{sub.name}</h3>
-                      {sub.description && <p className="text-gray-600 text-sm mb-4">{sub.description}</p>}
-                      <div className="pt-4 border-t border-gray-100">
-                        <button
-                          onClick={() => openForm('subcategory', sub)}
-                          className="text-sm text-green-600 hover:text-green-700 font-semibold flex items-center gap-1"
-                        >
-                          ✏️ Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Topics */}
-            {activeTab === 'topics' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>📋</span> Topics ({filteredTopics.length})
-                  </h2>
-                  <button
-                    onClick={() => openForm('topic')}
-                    className="bg-white text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-100 transition-all font-semibold flex items-center gap-2"
-                  >
-                    <span>➕</span> Add Topic
-                  </button>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredTopics.map(topic => (
-                    <div key={topic._id} className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-cyan-400 hover:shadow-xl hover:shadow-sky-500/20 transition-all duration-300 shadow-lg group">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-2xl shadow-lg group-hover:scale-110 transition-transform">
-                          📋
-                        </div>
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">{topic.name}</h3>
-                      {topic.description && <p className="text-gray-600 text-sm mb-4">{topic.description}</p>}
-                      <div className="pt-4 border-t border-gray-100">
-                        <button
-                          onClick={() => openForm('topic', topic)}
-                          className="text-sm text-cyan-500 hover:text-sky-700 font-semibold flex items-center gap-1"
-                        >
-                          ✏️ Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Letters */}
-            {activeTab === 'letters' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>📄</span> Letters ({filteredLetters.length})
-                  </h2>
-                  <button
-                    onClick={() => openForm('letter')}
-                    className="bg-white text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-100 transition-all font-semibold flex items-center gap-2"
-                  >
-                    <span>➕</span> Add Letter
-                  </button>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                  {filteredLetters.map(letter => (
-                    <div key={letter._id} className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-400 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300 shadow-lg group">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-2xl shadow-lg group-hover:scale-110 transition-transform">
-                          📄
-                        </div>
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-3">{letter.title}</h3>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-4">{letter.content}</p>
-                      <div className="pt-4 border-t border-gray-100">
-                        <button
-                          onClick={() => openForm('letter', letter)}
-                          className="text-sm text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-1"
-                        >
-                          ✏️ Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+        .nav-btn:hover{background:rgba(255,255,255,0.07)!important}
+        .action-btn-edit:hover{background:#eff6ff!important}
+        .action-btn-del:hover{background:#fef2f2!important}
+        .stat-card{transition:transform 0.2s,box-shadow 0.2s}
+        .stat-card:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(15,23,42,0.12)!important}
+        .letter-card{transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}
+        .letter-card:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(245,158,11,0.15)!important;border-color:#fcd34d!important}
+        input:focus,select:focus,textarea:focus{border-color:${accentColor.from}!important;box-shadow:0 0 0 4px ${accentColor.ring}80!important}
+      `}</style>
+      {notification && (
+        <div style={{ position:'fixed', top:20, right:20, zIndex:2000, animation:'slideIn 0.3s ease' }}>
+          <div style={{
+            padding:'14px 20px',
+            borderRadius:12,
+            background:notification.type === 'error' ? '#fef2f2' : '#ecfdf5',
+            border:`1.5px solid ${notification.type === 'error' ? '#fecaca' : '#a7f3d0'}`,
+            color:notification.type === 'error' ? '#dc2626' : '#059669',
+            fontSize:14,
+            fontWeight:600,
+            boxShadow:'0 8px 24px rgba(0,0,0,0.12)',
+            display:'flex',
+            alignItems:'center',
+            gap:10
+          }}>
+            {notification.type === 'error' ? '⚠️' : '✓'} {notification.message}
           </div>
         </div>
-      </DashboardShell>
+      )}
+      {renderForm()}
+
+      <div style={{ minHeight:'100vh', display:'flex', fontFamily:'system-ui,-apple-system,sans-serif', background:'#f8fafc' }}>
+
+        {/* ── SIDEBAR ── */}
+        <aside style={{ width:260, background:'linear-gradient(180deg,#0f0c29 0%,#1e1b4b 50%,#0f0c29 100%)', display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', flexShrink:0, borderRight:'1px solid rgba(255,255,255,0.05)' }}>
+          {/* Logo */}
+          <div style={{ padding:'28px 24px 24px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{ width:44, height:44, borderRadius:14, background:'linear-gradient(135deg,#6366f1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px #6366f160' }}>
+                <svg
+                  width="22"
+                  height="22"
+                  fill="#60a5fa"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ color:'#fff', fontWeight:800, fontSize:16, letterSpacing:'-0.02em' }}>Admin Panel</div>
+                <div style={{ color:'#818cf8', fontSize:12, fontWeight:500, marginTop:1 }}>Words to Wellness</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div style={{ padding:'16px 16px 8px' }}>
+            <div style={{ position:'relative' }}>
+              <Search size={14} color="#818cf8" style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)' }} />
+              <input
+                type="text"
+                placeholder="Search content…"
+                value={searchQuery}
+                onChange={e=>setSearchQuery(e.target.value)}
+                style={{ width:'100%', padding:'10px 12px 10px 34px', background:'rgba(255,255,255,0.12)', border:'1.5px solid rgba(129,140,248,0.3)', borderRadius:12, color:'#fff', fontSize:13, outline:'none', boxSizing:'border-box', transition:'border-color 0.2s, background 0.2s' }}
+                onFocus={e=>e.target.style.borderColor='rgba(129,140,248,0.6)'}
+                onBlur={e=>e.target.style.borderColor='rgba(129,140,248,0.3)'}
+              />
+            </div>
+          </div>
+
+          {/* Nav */}
+          <nav style={{ flex:1, padding:'8px 12px', display:'flex', flexDirection:'column', gap:2 }}>
+            <div style={{ padding:'8px 12px 6px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', letterSpacing:'0.1em', textTransform:'uppercase' }}>Navigation</div>
+            {NAV_ITEMS.map(item => {
+              const active = activeTab === item.id;
+              const ac = ACCENT[item.id] || ACCENT.categories;
+              return (
+                <button key={item.id} className="nav-btn" onClick={()=>setActiveTab(item.id)} style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'11px 14px', borderRadius:12, border:'none', cursor:'pointer', background: active ? `linear-gradient(135deg,${ac.from}22,${ac.to}22)` : 'transparent', transition:'background 0.15s', textAlign:'left', borderLeft: active ? `3px solid ${ac.from}` : '3px solid transparent' }}>
+                  <item.icon size={18} color={active ? ac.from : 'rgba(255,255,255,0.4)'} />
+                  <span style={{ fontSize:14, fontWeight: active ? 700 : 500, color: active ? '#f1f5f9' : 'rgba(255,255,255,0.5)', flex:1 }}>{item.label}</span>
+                  {active && <ChevronRight size={14} color={ac.from} />}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* User + Logout */}
+          <div style={{ padding:'16px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'rgba(255,255,255,0.04)', borderRadius:12, marginBottom:8 }}>
+              <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#818cf8,#6366f1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', flexShrink:0 }}>
+                {user?.email?.charAt(0).toUpperCase() || 'A'}
+              </div>
+              <div style={{ overflow:'hidden', flex:1 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</div>
+                <div style={{ fontSize:11, color:'#818cf8', fontWeight:500 }}>Administrator</div>
+              </div>
+            </div>
+            <button onClick={handleLogout} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, border:'none', background:'rgba(239,68,68,0.1)', cursor:'pointer', color:'#f87171', fontSize:14, fontWeight:600, transition:'background 0.15s' }}>
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
+        </aside>
+
+        {/* ── MAIN ── */}
+        <main style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
+          {/* Topbar */}
+          <header style={{ background:'rgba(255,255,255,0.9)', backdropFilter:'blur(16px)', borderBottom:'1px solid #e2e8f0', padding:'0 32px', height:68, display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:50 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <div style={{ padding:'6px 16px', borderRadius:20, background:`linear-gradient(135deg,${accentColor.from},${accentColor.to})`, color:'#fff', fontSize:13, fontWeight:700, boxShadow:`0 4px 12px ${accentColor.from}50`, display:'flex', alignItems:'center', gap:6 }}>
+                <Shield size={14} />
+                Admin
+              </div>
+              <span style={{ color:'#94a3b8', fontSize:13 }}>
+                {NAV_ITEMS.find(n=>n.id===activeTab)?.label}
+              </span>
+            </div>
+            
+          </header>
+
+          {/* Content */}
+          <div style={{ flex:1, padding:'32px', overflowY:'auto', animation:'fadeIn 0.3s ease' }}>
+            <div style={{ maxWidth:1100, margin:'0 auto' }}>
+
+              {/* ── OVERVIEW ── */}
+              {activeTab === 'overview' && (
+                <div>
+                  <div style={{ marginBottom:32 }}>
+                    <h1 style={{ fontSize:28, fontWeight:800, color:'#0f172a', margin:0, letterSpacing:'-0.03em' }}>
+                      Good morning 👋
+                    </h1>
+                    <p style={{ color:'#94a3b8', marginTop:6, fontSize:15 }}>Here's what's happening on your platform today.</p>
+                  </div>
+
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20, marginBottom:32 }}>
+                    {stats.map((s, i) => (
+                      <div key={i} className="stat-card" style={{ background:'#fff', borderRadius:20, padding:'24px', border:'1px solid #e2e8f0', boxShadow:'0 4px 24px rgba(15,23,42,0.06)', display:'flex', flexDirection:'column', gap:16 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                          <div style={{ width:48, height:48, borderRadius:16, background:`linear-gradient(135deg,${s.from},${s.to})`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 8px 20px ${s.from}40` }}>
+                            <s.icon size={22} color="#fff" />
+                          </div>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:20, background:s.light, color:s.text, fontSize:12, fontWeight:700 }}>
+                            <TrendingUp size={12} />
+                            +12%
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:36, fontWeight:800, color:'#0f172a', lineHeight:1, letterSpacing:'-0.04em' }}>{s.value}</div>
+                          <div style={{ fontSize:14, color:'#64748b', fontWeight:500, marginTop:4 }}>{s.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+                    <div style={{ background:'#fff', borderRadius:20, padding:28, border:'1px solid #e2e8f0', boxShadow:'0 4px 24px rgba(15,23,42,0.06)' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                        <h2 style={{ fontSize:16, fontWeight:700, color:'#0f172a', margin:0 }}>Content Breakdown</h2>
+                      </div>
+                      {[
+                        { label:'Categories', value:categories.length, max: Math.max(categories.length,1), color:'#6366f1' },
+                        { label:'Subcategories', value:subcategories.length, max: Math.max(subcategories.length,1), color:'#10b981' },
+                        { label:'Topics', value:topics.length, max: Math.max(topics.length,1), color:'#0ea5e9' },
+                        { label:'Letters', value:letters.length, max: Math.max(letters.length,1), color:'#f59e0b' },
+                      ].map((item, i) => {
+                        const total = categories.length + subcategories.length + topics.length + letters.length || 1;
+                        const pct = Math.round((item.value / total) * 100);
+                        return (
+                          <div key={i} style={{ marginBottom:16 }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600, color:'#475569', marginBottom:8 }}>
+                              <span>{item.label}</span>
+                              <span style={{ color:item.color }}>{item.value}</span>
+                            </div>
+                            <div style={{ height:8, background:'#f1f5f9', borderRadius:4, overflow:'hidden' }}>
+                              <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${item.color}cc,${item.color})`, borderRadius:4, transition:'width 1s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ background:'#fff', borderRadius:20, padding:28, border:'1px solid #e2e8f0', boxShadow:'0 4px 24px rgba(15,23,42,0.06)' }}>
+                      <h2 style={{ fontSize:16, fontWeight:700, color:'#0f172a', margin:'0 0 20px' }}>Quick Actions</h2>
+                      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                        {[
+                          { label:'Add User', type:'user', ...ACCENT.users },
+                          { label:'Add Category', type:'category', ...ACCENT.categories },
+                          { label:'Add Subcategory', type:'subcategory', ...ACCENT.subcategories },
+                          { label:'Add Topic', type:'topic', ...ACCENT.topics },
+                          { label:'Add Letter', type:'letter', ...ACCENT.letters },
+                        ].map((a, i) => (
+                          <button key={i} onClick={()=>openForm(a.type)} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderRadius:14, border:`1.5px dashed ${a.ring}`, background:a.light, cursor:'pointer', transition:'all 0.15s', textAlign:'left' }}>
+                            <div style={{ width:34, height:34, borderRadius:10, background:`linear-gradient(135deg,${a.from},${a.to})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:`0 4px 12px ${a.from}40` }}>
+                              <Plus size={16} color="#fff" />
+                            </div>
+                            <span style={{ fontSize:14, fontWeight:700, color:a.text }}>{a.label}</span>
+                            <ChevronRight size={16} color={a.from} style={{ marginLeft:'auto' }} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── USERS ── */}
+              {activeTab === 'users' && (
+                <div style={{ animation:'fadeIn 0.3s ease' }}>
+                  <PageHeader title="Users" subtitle="Manage user accounts and permissions" count={users.length}
+                    action={<AddBtn label="User" onClick={()=>openForm('user')} ac={ACCENT.users} />}
+                  />
+                  <Table
+                    cols={['User', 'Email', 'Role', 'Joined', 'Actions']}
+                    icon={Users} empty="No users found" loading={usersLoading}
+                    rows={users.map(u=>(
+                      <tr key={u._id} style={{ transition:'background 0.1s' }} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                            <div style={{ ...avatarStyle('#ec4899','#a855f7') }}>
+                              <span style={{ color:'#fff', fontSize:15, fontWeight:700 }}>{u.name?.charAt(0).toUpperCase()||'U'}</span>
+                            </div>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{u.name}</span>
+                          </div>
+                        </td>
+                      
+                        <td style={tdStyle}><span style={{ color:'#64748b' }}>{u.email}</span></td>
+                        <td style={tdStyle}>
+                          <span style={badgeStyle(u.role==='admin'?'#ede9fe':'#eff6ff', u.role==='admin'?'#7c3aed':'#1d4ed8')}>{u.role}</span>
+                        </td>
+                        <td style={{...tdStyle, color:'#94a3b8'}}>{new Date(u.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', gap:4 }}>
+                            <button className="action-btn-edit" onClick={()=>openForm('user',u)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
+                            <button className="action-btn-del" onClick={()=>handleDelete('user',u._id)} style={actionBtnStyle('#fef2f2')}><Trash2 size={15} color="#ef4444" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  />
+                </div>
+              )}
+
+              {/* ── CATEGORIES ── */}
+              {activeTab === 'categories' && (
+                <div style={{ animation:'fadeIn 0.3s ease' }}>
+                  <PageHeader title="Categories" subtitle="Manage content categories" count={filtered.categories.length}
+                    action={<AddBtn label="Category" onClick={()=>openForm('category')} ac={ACCENT.categories} />}
+                  />
+                  <Table
+                    cols={['Category','Description','Created','Actions']}
+                    icon={Layers} empty="No categories yet" loading={categoriesLoading}
+                    rows={filtered.categories.map(cat=>(
+                      <tr key={cat._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                            <div style={avatarStyle(ACCENT.categories.from, ACCENT.categories.to)}><Layers size={16} color="#fff" /></div>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{cat.name}</span>
+                          </div>
+                        </td>
+                        <td style={{...tdStyle, maxWidth:220}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{cat.description||'—'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(cat.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', gap:4 }}>
+                            <button className="action-btn-edit" onClick={()=>openForm('category',cat)} style={{...actionBtnStyle('#eff6ff')}} title="Edit"><Edit2 size={15} color="#3b82f6" /></button>
+                            <button className="action-btn-del" onClick={()=>handleDelete('category',cat._id)} style={{...actionBtnStyle('#fef2f2')}} title="Delete"><Trash2 size={15} color="#ef4444" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  />
+                </div>
+              )}
+
+              {/* ── SUBCATEGORIES ── */}
+              {activeTab === 'subcategories' && (
+                <div style={{ animation:'fadeIn 0.3s ease' }}>
+                  <PageHeader title="Subcategories" subtitle="Manage content subcategories" count={filtered.subcategories.length}
+                    action={<AddBtn label="Subcategory" onClick={()=>openForm('subcategory')} ac={ACCENT.subcategories} />}
+                  />
+                  <Table
+                    cols={['Subcategory','Category','Description','Created','Actions']}
+                    icon={FolderTree} empty="No subcategories yet" loading={subcategoriesLoading}
+                    rows={filtered.subcategories.map(sub=>(
+                      <tr key={sub._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                            <div style={avatarStyle(ACCENT.subcategories.from, ACCENT.subcategories.to)}><FolderTree size={16} color="#fff" /></div>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{sub.name}</span>
+                          </div>
+                        </td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.subcategories.light, ACCENT.subcategories.text)}>{sub.category?.name||'—'}</span></td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description||'—'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(sub.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', gap:4 }}>
+                            <button className="action-btn-edit" onClick={()=>openForm('subcategory',sub)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
+                            <button className="action-btn-del" onClick={()=>handleDelete('subcategory',sub._id)} style={actionBtnStyle('#fef2f2')}><Trash2 size={15} color="#ef4444" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  />
+                </div>
+              )}
+
+              {/* ── TOPICS ── */}
+              {activeTab === 'topics' && (
+                <div style={{ animation:'fadeIn 0.3s ease' }}>
+                  <PageHeader title="Topics" subtitle="Manage content topics" count={filtered.topics.length}
+                    action={<AddBtn label="Topic" onClick={()=>openForm('topic')} ac={ACCENT.topics} />}
+                  />
+                  <Table
+                    cols={['Topic','Subcategory','Description','Created','Actions']}
+                    icon={BookOpen} empty="No topics yet" loading={topicsLoading}
+                    rows={filtered.topics.map(topic=>(
+                      <tr key={topic._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                            <div style={avatarStyle(ACCENT.topics.from, ACCENT.topics.to)}><BookOpen size={16} color="#fff" /></div>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{topic.name}</span>
+                          </div>
+                        </td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.topics.light, ACCENT.topics.text)}>{topic.subcategory?.name||'—'}</span></td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description||'—'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(topic.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', gap:4 }}>
+                            <button className="action-btn-edit" onClick={()=>openForm('topic',topic)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
+                            <button className="action-btn-del" onClick={()=>handleDelete('topic',topic._id)} style={actionBtnStyle('#fef2f2')}><Trash2 size={15} color="#ef4444" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  />
+                </div>
+              )}
+
+              {/* ── LETTERS ── */}
+              {activeTab === 'letters' && (
+                <div style={{ animation:'fadeIn 0.3s ease' }}>
+                  <PageHeader title="Letters" subtitle="Manage all wellness letters" count={filtered.letters.length}
+                    action={<AddBtn label="Letter" onClick={()=>openForm('letter')} ac={ACCENT.letters} />}
+                  />
+                  <Table
+                    cols={['Letter','Topic','Content Preview','Created','Actions']}
+                    icon={FileText} empty="No letters yet" loading={lettersLoading}
+                    rows={filtered.letters.map(letter=>(
+                      <tr key={letter._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                            <div style={avatarStyle(ACCENT.letters.from, ACCENT.letters.to)}><FileText size={16} color="#fff" /></div>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{letter.title}</span>
+                          </div>
+                        </td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{letter.topic?.name||'—'}</span></td>
+                        <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(letter.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display:'flex', gap:4 }}>
+                            <button className="action-btn-edit" onClick={()=>openForm('letter',letter)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
+                            <button className="action-btn-del" onClick={()=>handleDelete('letter',letter._id)} style={actionBtnStyle('#fef2f2')}><Trash2 size={15} color="#ef4444" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  />
+                </div>
+              )}
+
+            </div>
+          </div>
+        </main>
+      </div>
     </>
+  );
+}
+
+/* ─── SUB-COMPONENTS ─── */
+function PageHeader({ title, subtitle, count, action }) {
+  return (
+    <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:24 }}>
+      <div>
+        <h1 style={{ fontSize:26, fontWeight:800, color:'#0f172a', margin:'0 0 4px', letterSpacing:'-0.03em' }}>
+          {title}
+          <span style={{ fontSize:15, fontWeight:600, color:'#94a3b8', marginLeft:10 }}>({count})</span>
+        </h1>
+        <p style={{ color:'#94a3b8', margin:0, fontSize:14 }}>{subtitle}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function AddBtn({ label, onClick, ac }) {
+  return (
+    <button onClick={onClick} style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 20px', borderRadius:14, border:'none', background:`linear-gradient(135deg,${ac.from},${ac.to})`, color:'#fff', fontSize:14, fontWeight:700, cursor:'pointer', boxShadow:`0 6px 20px ${ac.from}50`, transition:'transform 0.15s,box-shadow 0.15s', whiteSpace:'nowrap' }}
+      onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.03)';e.currentTarget.style.boxShadow=`0 10px 28px ${ac.from}60`}}
+      onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow=`0 6px 20px ${ac.from}50`}}
+    >
+      <Plus size={16} />
+      Add {label}
+    </button>
   );
 }

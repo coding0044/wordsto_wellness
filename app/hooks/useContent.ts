@@ -177,7 +177,7 @@ export const useCreateCategory = () => {
   return useMutation<Category, Error, CreateCategoryData>({
     mutationFn: async (data) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/categories', {
+      const response = await fetch('/api/content/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,13 +206,13 @@ export const useUpdateCategory = () => {
   return useMutation<Category, Error, { id: string; data: Partial<CreateCategoryData> }>({
     mutationFn: async ({ id, data }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/categories/${id}`, {
+      const response = await fetch('/api/content/categories', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ id, ...data }),
       });
       
       if (!response.ok) {
@@ -234,11 +234,13 @@ export const useDeleteCategory = () => {
   return useMutation<void, Error, string>({
     mutationFn: async (id) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/categories/${id}`, {
+      const response = await fetch('/api/content/categories', {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ id }),
       });
       
       if (!response.ok) {
@@ -259,7 +261,7 @@ export const useCreateSubcategory = () => {
   return useMutation<Subcategory, Error, CreateSubcategoryData>({
     mutationFn: async (data) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/subcategories', {
+      const response = await fetch('/api/content/subcategories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -282,13 +284,68 @@ export const useCreateSubcategory = () => {
   });
 };
 
+export const useUpdateSubcategory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Subcategory, Error, { id: string; data: Partial<CreateSubcategoryData> }>({
+    mutationFn: async ({ id, data }) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/subcategories', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update subcategory');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+    },
+  });
+};
+
+export const useDeleteSubcategory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/subcategories', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete subcategory');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+    },
+  });
+};
+
 export const useCreateTopic = () => {
   const queryClient = useQueryClient();
   
   return useMutation<Topic, Error, CreateTopicData>({
     mutationFn: async (data) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/topics', {
+      const response = await fetch('/api/content/topics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -311,13 +368,68 @@ export const useCreateTopic = () => {
   });
 };
 
+export const useUpdateTopic = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Topic, Error, { id: string; data: Partial<CreateTopicData> }>({
+    mutationFn: async ({ id, data }) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/topics', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update topic');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+    },
+  });
+};
+
+export const useDeleteTopic = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/topics', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete topic');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['letters'] });
+    },
+  });
+};
+
 export const useCreateLetter = () => {
   const queryClient = useQueryClient();
   
   return useMutation<Letter, Error, CreateLetterData>({
     mutationFn: async (data) => {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/letters', {
+      const response = await fetch('/api/content/letters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -332,6 +444,60 @@ export const useCreateLetter = () => {
       }
       
       return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['letters'] });
+    },
+  });
+};
+
+export const useUpdateLetter = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Letter, Error, { id: string; data: Partial<CreateLetterData> }>({
+    mutationFn: async ({ id, data }) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/letters', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update letter');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['letters'] });
+    },
+  });
+};
+
+export const useDeleteLetter = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/content/letters', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete letter');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['letters'] });
