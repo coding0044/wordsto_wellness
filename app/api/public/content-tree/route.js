@@ -110,7 +110,7 @@ export async function GET(request) {
     const normalizedCategories = Object.values(categoryMap);
     return NextResponse.json({ categories: normalizedCategories });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching content tree:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

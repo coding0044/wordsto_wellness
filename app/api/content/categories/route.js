@@ -44,7 +44,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { name, description } = await request.json();
+    const { name, slug, description } = await request.json();
 
     if (!name) {
       return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(request) {
 
     const category = new Category({
       name: name.trim(),
+      slug: slug?.trim(),
       description: description?.trim(),
     });
 
@@ -82,7 +83,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id, name, description } = await request.json();
+    const { id, name, slug, description } = await request.json();
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Category ID and name are required' }, { status: 400 });
@@ -90,7 +91,7 @@ export async function PUT(request) {
 
     const category = await Category.findByIdAndUpdate(
       id,
-      { name: name.trim(), description: description?.trim() },
+      { name: name.trim(), slug: slug?.trim(), description: description?.trim() },
       { new: true, runValidators: true }
     );
 

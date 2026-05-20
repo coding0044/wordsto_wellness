@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { useCategories, useSubcategoriesByCategory } from '@/hooks/useContent';
+import { useContentTree } from '@/hooks/useContent';
 import Link from 'next/link';
 
 // Navigation Component
@@ -82,8 +82,7 @@ function SubcategoriesContent() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
-  const { data: categoriesData } = useCategories();
-  const { data: subcategoriesData, isLoading: subcategoriesLoading } = useSubcategoriesByCategory(categoryId);
+  const { data: contentTreeData, isLoading: contentTreeLoading, error: contentTreeError } = useContentTree();
 
   useEffect(() => {
     setIsClient(true);
@@ -93,22 +92,16 @@ function SubcategoriesContent() {
     if (userError) router.push('/login');
   }, [userError, router]);
 
-  useEffect(() => {
-    if (!categoryId && isClient) {
-      router.push('/dashboard-letters');
-    }
-  }, [categoryId, isClient, router]);
-
-  const categories = Array.isArray(categoriesData) ? categoriesData : [];
-  const subcategories = Array.isArray(subcategoriesData) ? subcategoriesData : [];
-  const currentCategory = categories.find(c => c._id === categoryId);
+  const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
+  const currentCategory = categories.find(c => String(c._id) === String(categoryId));
+  const subcategories = currentCategory?.subcategories || [];
 
   const filteredSubcategories = subcategories.filter(sub =>
     sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sub.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (!isClient || userLoading) {
+  if (!isClient || userLoading || contentTreeLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
         <div className="space-y-4">
@@ -120,6 +113,20 @@ function SubcategoriesContent() {
   }
 
   if (!userData) return null;
+
+  if (!categoryId || (!currentCategory && !contentTreeLoading)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center px-6">
+        <div className="max-w-xl text-center bg-white p-10 rounded-3xl shadow-lg border border-gray-100">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Category not found</h1>
+          <p className="text-gray-600 mb-6">The selected category is not available. Please go back to the category list and try again.</p>
+          <Link href="/dashboard-letters" className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors">
+            Back to categories
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
@@ -138,12 +145,12 @@ function SubcategoriesContent() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <Link href="/dashboard-letters" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+            <button onClick={() => router.back()} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
               </svg>
-              Back to Categories
-            </Link>
+              Back
+            </button>
           </div>
           <div className="flex items-center gap-4 mb-2">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-2xl shadow-md">
@@ -173,7 +180,7 @@ function SubcategoriesContent() {
         </div>
 
         {/* Subcategories Grid */}
-        {subcategoriesLoading ? (
+        {contentTreeLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="space-y-4">
               <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>

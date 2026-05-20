@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser, useUsers } from '@/hooks/useAuth';
-import { useCategories, useSubcategories, useTopics, useLetters } from '@/hooks/useContent';
+import { useContentTree } from '@/hooks/useContent';
 import {
   useCreateCategory, useUpdateCategory, useDeleteCategory,
   useCreateSubcategory, useUpdateSubcategory, useDeleteSubcategory,
@@ -12,7 +13,8 @@ import {
 import {
   LayoutDashboard, FileText, Users, FolderTree, LogOut,
   Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,
-  Layers, BookOpen, ChevronRight, TrendingUp, Bell
+  Layers, BookOpen, ChevronRight, TrendingUp, Bell,
+  ChevronLeft, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -32,8 +34,159 @@ const ACCENT = {
   users:         { from: '#ec4899', to: '#a855f7', light: '#fdf4ff', text: '#9333ea', ring: '#e9d5ff' },
 };
 
+// Pagination Component
+function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between',
+      padding: '16px 20px',
+      borderTop: '1px solid #e2e8f0',
+      background: '#fff',
+      flexWrap: 'wrap',
+      gap: '12px'
+    }}>
+      <div style={{ fontSize: 13, color: '#64748b' }}>
+        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+      </div>
+      
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: '8px 12px',          
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: currentPage === 1 ? '#f1f5f9' : '#fff',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            color: currentPage === 1 ? '#94a3b8' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 13,
+            transition: 'all 0.15s'
+          }}
+        >
+          <ChevronsLeft size={14} /> First
+        </button>
+        
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: currentPage === 1 ? '#f1f5f9' : '#fff',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            color: currentPage === 1 ? '#94a3b8' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 13
+          }}
+        >
+          <ChevronLeft size={14} /> Prev
+        </button>
+        
+        {getPageNumbers().map((page, index) => (
+          page === '...' ? (
+            <span key={`dots-${index}`} style={{ padding: '8px 4px', color: '#94a3b8' }}>...</span>
+          ) : (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: currentPage === page ? 'none' : '1px solid #e2e8f0',
+                background: currentPage === page ? `linear-gradient(135deg, ${accentColor.from}, ${accentColor.to})` : '#fff',
+                color: currentPage === page ? '#fff' : '#475569',
+                cursor: 'pointer',
+                fontWeight: currentPage === page ? 600 : 400,
+                fontSize: 13,
+                transition: 'all 0.15s'
+              }}
+            >
+              {page}
+            </button>
+          )
+        ))}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: currentPage === totalPages ? '#f1f5f9' : '#fff',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            color: currentPage === totalPages ? '#94a3b8' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 13
+          }}
+        >
+          Next <ChevronRight size={14} />
+        </button>
+        
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: currentPage === totalPages ? '#f1f5f9' : '#fff',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            color: currentPage === totalPages ? '#94a3b8' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 13
+          }}
+        >
+          Last <ChevronsRight size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab]   = useState('overview');
+  const [activeTab, setActiveTab]   = useState('categories');
   const [showForm, setShowForm]     = useState(false);
   const [formData, setFormData]     = useState({});
   const [formType, setFormType]     = useState('');
@@ -42,7 +195,18 @@ export default function AdminDashboard() {
   const [isClient, setIsClient]     = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notification, setNotification] = useState(null);
+  
+  // Pagination states
+  const [pagination, setPagination] = useState({
+    categories: { page: 1, itemsPerPage: 10 },
+    subcategories: { page: 1, itemsPerPage: 10 },
+    topics: { page: 1, itemsPerPage: 10 },
+    letters: { page: 1, itemsPerPage: 10 },
+    users: { page: 1, itemsPerPage: 10 },
+  });
+  
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -53,17 +217,18 @@ export default function AdminDashboard() {
 
   const { data: userData,       isLoading: userLoading,        error: userError }    = useCurrentUser();
   const { data: usersData,      isLoading: usersLoading }      = useUsers();
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
-  const { data: subcategoriesData, isLoading: subcategoriesLoading } = useSubcategories();
-  const { data: topicsData,     isLoading: topicsLoading }     = useTopics();
-  const { data: lettersData,    isLoading: lettersLoading }    = useLetters();
+  const { data: contentTreeData, isLoading: contentTreeLoading, error: contentTreeError } = useContentTree();
 
   const user         = userData;
-  const users        = usersData        || [];
-  const categories   = categoriesData   || [];
-  const subcategories = subcategoriesData || [];
-  const topics       = topicsData       || [];
-  const letters      = lettersData      || [];
+  const users        = Array.isArray(usersData) ? usersData : [];
+  const categories   = Array.isArray(contentTreeData) ? contentTreeData : [];
+  const subcategories = useMemo(() => categories.flatMap((category) => category.subcategories || []), [categories]);
+  const topics       = useMemo(() => subcategories.flatMap((subcategory) => subcategory.topics || []), [subcategories]);
+  const letters      = useMemo(() => topics.flatMap((topic) => topic.letters || []), [topics]);
+
+  const categoryMap = useMemo(() => new Map(categories.map(c => [c._id, c.name])), [categories]);
+  const subcategoryMap = useMemo(() => new Map(subcategories.map(s => [s._id, s.name])), [subcategories]);
+  const topicMap = useMemo(() => new Map(topics.map(t => [t._id, t.name])), [topics]);
 
   const createCategoryMutation    = useCreateCategory();
   const updateCategoryMutation    = useUpdateCategory();
@@ -80,7 +245,7 @@ export default function AdminDashboard() {
 
   const checkAdmin = useCallback(() => {
     if (userError) { router.push('/login'); return; }
-    if (user && user.role !== 'admin') { router.push('/admin-dashboard'); }
+    if (user && user.role !== 'admin') { router.push('/dashboard'); }
   }, [userError, router, user]);
 
   useEffect(() => { checkAdmin(); }, [checkAdmin]);
@@ -104,11 +269,15 @@ export default function AdminDashboard() {
         role: item.role || 'user',
         password: '',
         description: item.description || '',
+        slug: item.slug || '',
         category: item.category?._id || item.category || '',
         subcategory: item.subcategory?._id || item.subcategory || '',
         topic: item.topic?._id || item.topic || '',
         title: item.title || '',
         content: item.content || '',
+        letter_type: item.letter_type || '',
+        level: item.level || '',
+        full_code: item.full_code || '',
       });
     } else {
       setEditingItem(null);
@@ -124,15 +293,29 @@ export default function AdminDashboard() {
     if (type === 'user') {
       fetch(`/api/auth/admin/users?id=${id}`, { method: 'DELETE' })
         .then(res => res.json())
-        .then(() => showNotification('User deleted successfully'))
+        .then(() => {
+          showNotification('User deleted successfully');
+          queryClient.invalidateQueries(['users']);
+        })
         .catch(error => showNotification(error.message || 'Failed to delete user', 'error'));
     } else {
       const map = { category: deleteCategoryMutation, subcategory: deleteSubcategoryMutation, topic: deleteTopicMutation, letter: deleteLetterMutation };
       map[type]?.mutate(id, {
-        onSuccess: () => showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`),
+        onSuccess: () => {
+          showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+          // Reset to first page after deletion
+          setPagination(prev => ({ ...prev, [type === 'letter' ? 'letters' : type + 's']: { ...prev[type === 'letter' ? 'letters' : type + 's'], page: 1 } }));
+        },
         onError: (error) => showNotification(error.message || `Failed to delete ${type}`, 'error')
       });
     }
+  };
+
+  const handlePageChange = (tab, newPage) => {
+    setPagination(prev => ({
+      ...prev,
+      [tab]: { ...prev[tab], page: newPage }
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -148,7 +331,7 @@ export default function AdminDashboard() {
           body: JSON.stringify(d)
         })
           .then(res => res.json())
-          .then(() => { showNotification('User updated successfully'); closeForm(); })
+          .then(() => { showNotification('User updated successfully'); closeForm(); queryClient.invalidateQueries(['users']); })
           .catch(error => showNotification(error.message || 'Failed to update user', 'error'));
       } else {
         fetch('/api/auth/admin/users', {
@@ -157,72 +340,88 @@ export default function AdminDashboard() {
           body: JSON.stringify(d)
         })
           .then(res => res.json())
-          .then(() => { showNotification('User created successfully'); closeForm(); })
+          .then(() => { showNotification('User created successfully'); closeForm(); queryClient.invalidateQueries(['users']); })
           .catch(error => showNotification(error.message || 'Failed to create user', 'error'));
       }
     } else if (formType === 'category') {
-      const d = { name: formData.name, description: formData.description };
+      const d = { name: formData.name, slug: formData.slug, description: formData.description };
       if (editingItem) {
         updateCategoryMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification('Category updated successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Category updated successfully'); closeForm(); setPagination(prev => ({ ...prev, categories: { ...prev.categories, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to update category', 'error')
         });
       } else {
         createCategoryMutation.mutate(d, {
-          onSuccess: () => { showNotification('Category created successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Category created successfully'); closeForm(); setPagination(prev => ({ ...prev, categories: { ...prev.categories, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to create category', 'error')
         });
       }
     } else if (formType === 'subcategory') {
-      const d = { name: formData.name, description: formData.description, category: formData.category };
+      const d = { name: formData.name, slug: formData.slug, description: formData.description, category: formData.category };
       if (editingItem) {
         updateSubcategoryMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification('Subcategory updated successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Subcategory updated successfully'); closeForm(); setPagination(prev => ({ ...prev, subcategories: { ...prev.subcategories, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to update subcategory', 'error')
         });
       } else {
         createSubcategoryMutation.mutate(d, {
-          onSuccess: () => { showNotification('Subcategory created successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Subcategory created successfully'); closeForm(); setPagination(prev => ({ ...prev, subcategories: { ...prev.subcategories, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to create subcategory', 'error')
         });
       }
     } else if (formType === 'topic') {
-      const d = { name: formData.name, description: formData.description, subcategory: formData.subcategory };
+      const d = { name: formData.name, slug: formData.slug, description: formData.description, subcategory: formData.subcategory };
       if (editingItem) {
         updateTopicMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification('Topic updated successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Topic updated successfully'); closeForm(); setPagination(prev => ({ ...prev, topics: { ...prev.topics, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to update topic', 'error')
         });
       } else {
         createTopicMutation.mutate(d, {
-          onSuccess: () => { showNotification('Topic created successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Topic created successfully'); closeForm(); setPagination(prev => ({ ...prev, topics: { ...prev.topics, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to create topic', 'error')
         });
       }
     } else if (formType === 'letter') {
-      const d = { title: formData.title, content: formData.content, topic: formData.topic };
+      const d = { title: formData.title, content: formData.content, topic: formData.topic, letter_type: formData.letter_type, level: formData.level, full_code: formData.full_code };
       if (editingItem) {
         updateLetterMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification('Letter updated successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Letter updated successfully'); closeForm(); setPagination(prev => ({ ...prev, letters: { ...prev.letters, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to update letter', 'error')
         });
       } else {
         createLetterMutation.mutate(d, {
-          onSuccess: () => { showNotification('Letter created successfully'); closeForm(); },
+          onSuccess: () => { showNotification('Letter created successfully'); closeForm(); setPagination(prev => ({ ...prev, letters: { ...prev.letters, page: 1 } })); },
           onError: (error) => showNotification(error.message || 'Failed to create letter', 'error')
         });
       }
     }
   };
 
-  const filtered = {
-    categories:    categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    subcategories: subcategories.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    topics:        topics.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    letters:       letters.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase())),
+  // Filter and paginate data
+  const getPaginatedData = (data, tab) => {
+    const filtered = data.filter(item => {
+      if (tab === 'users') return item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      if (tab === 'letters') return item.title?.toLowerCase().includes(searchQuery.toLowerCase());
+      return item.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+    
+    const { page, itemsPerPage } = pagination[tab];
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedItems = filtered.slice(start, end);
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    
+    return { items: paginatedItems, totalPages, totalItems: filtered.length };
   };
 
-  if (!isClient || userLoading) return (
+  const categoriesData_paginated = getPaginatedData(categories, 'categories');
+  const subcategoriesData_paginated = getPaginatedData(subcategories, 'subcategories');
+  const topicsData_paginated = getPaginatedData(topics, 'topics');
+  const lettersData_paginated = getPaginatedData(letters, 'letters');
+  const usersData_paginated = getPaginatedData(users, 'users');
+
+  if (!isClient || userLoading || contentTreeLoading) return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div style={{ textAlign:'center' }}>
         <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center" style={{ margin:'0 auto 24px' }}>
@@ -239,6 +438,9 @@ export default function AdminDashboard() {
     </div>
   );
   if (!user) return null;
+
+  const fetchErrors = [contentTreeError].filter(Boolean);
+  const errorMessage = fetchErrors.length ? fetchErrors.map(e=>e?.message || String(e)).join(' • ') : null;
 
   const accentColor = ACCENT[activeTab] || ACCENT.categories;
 
@@ -321,19 +523,39 @@ export default function AdminDashboard() {
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Title *</label>
                   <input type="text" placeholder="Enter letter title" value={formData.title||''} onChange={e=>setFormData({...formData,title:e.target.value})} required style={inputCls} />
                 </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                  <div>
+                    <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Letter Type</label>
+                    <input type="text" placeholder="e.g., A, B, C" value={formData.letter_type||''} onChange={e=>setFormData({...formData,letter_type:e.target.value})} style={inputCls} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Level</label>
+                    <input type="text" placeholder="e.g., a, b, c" value={formData.level||''} onChange={e=>setFormData({...formData,level:e.target.value})} style={inputCls} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Full Code</label>
+                  <input type="text" placeholder="e.g., A_a" value={formData.full_code||''} onChange={e=>setFormData({...formData,full_code:e.target.value})} style={inputCls} />
+                </div>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Content *</label>
                   <textarea placeholder="Write the letter content…" value={formData.content||''} onChange={e=>setFormData({...formData,content:e.target.value})} required rows={6} style={{...inputCls,resize:'vertical',lineHeight:1.6}} />
                 </div>
               </>
             )}
-            {formType !== 'letter' && formType !== 'user' && (
-              <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>{formType === 'category' ? 'Category' : formType === 'subcategory' ? 'Subcategory' : 'Topic'} Name *</label>
-                <input type="text" placeholder={`Enter ${formType} name`} value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
-              </div>
+            {(formType !== 'letter' && formType !== 'user' && formType !== 'subcategory' && formType !== 'topic') && (
+              <>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Name *</label>
+                  <input type="text" placeholder={`Enter ${formType} name`} value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Slug</label>
+                  <input type="text" placeholder="URL-friendly identifier (optional)" value={formData.slug||''} onChange={e=>setFormData({...formData,slug:e.target.value})} style={inputCls} />
+                </div>
+              </>
             )}
-            {formType !== 'letter' && formType !== 'user' && (
+            {(formType !== 'letter' && formType !== 'user' && formType !== 'subcategory' && formType !== 'topic') && (
               <div>
                 <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Description</label>
                 <textarea placeholder="Optional description…" value={formData.description||''} onChange={e=>setFormData({...formData,description:e.target.value})} rows={3} style={{...inputCls,resize:'vertical'}} />
@@ -354,7 +576,7 @@ export default function AdminDashboard() {
   };
 
   /* ─── TABLE HELPER ─── */
-  const Table = ({ cols, rows, loading, icon: Icon, empty }) => (
+  const Table = ({ cols, rows, loading, icon: Icon, empty, tabName }) => (
     <div style={{ background:'#fff', borderRadius:20, border:'1px solid #e2e8f0', overflow:'hidden', boxShadow:'0 4px 24px rgba(15,23,42,0.06)' }}>
       {loading ? (
         <div style={{ padding:48, textAlign:'center' }}>
@@ -369,18 +591,28 @@ export default function AdminDashboard() {
           <p style={{ color:'#94a3b8', fontFamily:'system-ui', fontSize:15, fontWeight:500 }}>{empty}</p>
         </div>
       ) : (
-        <div style={{ overflowX:'auto' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
-            <thead>
-              <tr style={{ background:'#f8fafc', borderBottom:'1px solid #e2e8f0' }}>
-                {cols.map(c=>(
-                  <th key={c} style={{ padding:'14px 20px', textAlign:'left', fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'system-ui', whiteSpace:'nowrap' }}>{c}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-          </table>
-        </div>
+        <>
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead>
+                <tr style={{ background:'#f8fafc', borderBottom:'1px solid #e2e8f0' }}>
+                  {cols.map(c=>(
+                    <th key={c} style={{ padding:'14px 20px', textAlign:'left', fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'system-ui', whiteSpace:'nowrap' }}>{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>{rows}</tbody>
+            </table>
+          </div>
+          <Pagination 
+            currentPage={pagination[tabName].page}
+            totalPages={Math.ceil(getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName).totalPages)}
+            onPageChange={(page) => handlePageChange(tabName, page)}
+            totalItems={getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName).totalItems}
+            itemsPerPage={pagination[tabName].itemsPerPage}
+            accentColor={ACCENT[tabName] || ACCENT.categories}
+          />
+        </>
       )}
     </div>
   );
@@ -466,7 +698,7 @@ export default function AdminDashboard() {
                 type="text"
                 placeholder="Search content…"
                 value={searchQuery}
-                onChange={e=>setSearchQuery(e.target.value)}
+                onChange={e=>{setSearchQuery(e.target.value); setPagination(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], page: 1 } }));}}
                 style={{ width:'100%', padding:'10px 12px 10px 34px', background:'rgba(255,255,255,0.12)', border:'1.5px solid rgba(129,140,248,0.3)', borderRadius:12, color:'#fff', fontSize:13, outline:'none', boxSizing:'border-box', transition:'border-color 0.2s, background 0.2s' }}
                 onFocus={e=>e.target.style.borderColor='rgba(129,140,248,0.6)'}
                 onBlur={e=>e.target.style.borderColor='rgba(129,140,248,0.3)'}
@@ -481,7 +713,7 @@ export default function AdminDashboard() {
               const active = activeTab === item.id;
               const ac = ACCENT[item.id] || ACCENT.categories;
               return (
-                <button key={item.id} className="nav-btn" onClick={()=>setActiveTab(item.id)} style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'11px 14px', borderRadius:12, border:'none', cursor:'pointer', background: active ? `linear-gradient(135deg,${ac.from}22,${ac.to}22)` : 'transparent', transition:'background 0.15s', textAlign:'left', borderLeft: active ? `3px solid ${ac.from}` : '3px solid transparent' }}>
+                <button key={item.id} className="nav-btn" onClick={()=>{setActiveTab(item.id); setSearchQuery('');}} style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'11px 14px', borderRadius:12, border:'none', cursor:'pointer', background: active ? `linear-gradient(135deg,${ac.from}22,${ac.to}22)` : 'transparent', transition:'background 0.15s', textAlign:'left', borderLeft: active ? `3px solid ${ac.from}` : '3px solid transparent' }}>
                   <item.icon size={18} color={active ? ac.from : 'rgba(255,255,255,0.4)'} />
                   <span style={{ fontSize:14, fontWeight: active ? 700 : 500, color: active ? '#f1f5f9' : 'rgba(255,255,255,0.5)', flex:1 }}>{item.label}</span>
                   {active && <ChevronRight size={14} color={ac.from} />}
@@ -526,6 +758,11 @@ export default function AdminDashboard() {
 
           {/* Content */}
           <div style={{ flex:1, padding:'32px', overflowY:'auto', animation:'fadeIn 0.3s ease' }}>
+            {errorMessage && (
+              <div style={{ maxWidth:1100, margin:'0 auto 20px', padding:'16px 20px', borderRadius:18, background:'#fef2f2', border:'1px solid #fecaca', color:'#b91c1c', fontSize:14, fontWeight:600 }}>
+                Content fetch error: {errorMessage}
+              </div>
+            )}
             <div style={{ maxWidth:1100, margin:'0 auto' }}>
 
               {/* ── OVERVIEW ── */}
@@ -612,13 +849,13 @@ export default function AdminDashboard() {
               {/* ── USERS ── */}
               {activeTab === 'users' && (
                 <div style={{ animation:'fadeIn 0.3s ease' }}>
-                  <PageHeader title="Users" subtitle="Manage user accounts and permissions" count={users.length}
+                  <PageHeader title="Users" subtitle="Manage user accounts and permissions" count={usersData_paginated.totalItems}
                     action={<AddBtn label="User" onClick={()=>openForm('user')} ac={ACCENT.users} />}
                   />
                   <Table
                     cols={['User', 'Email', 'Role', 'Joined', 'Actions']}
-                    icon={Users} empty="No users found" loading={usersLoading}
-                    rows={users.map(u=>(
+                    icon={Users} empty="No users found" loading={usersLoading} tabName="users"
+                    rows={usersData_paginated.items.map(u=>(
                       <tr key={u._id} style={{ transition:'background 0.1s' }} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -628,7 +865,6 @@ export default function AdminDashboard() {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{u.name}</span>
                           </div>
                         </td>
-                      
                         <td style={tdStyle}><span style={{ color:'#64748b' }}>{u.email}</span></td>
                         <td style={tdStyle}>
                           <span style={badgeStyle(u.role==='admin'?'#ede9fe':'#eff6ff', u.role==='admin'?'#7c3aed':'#1d4ed8')}>{u.role}</span>
@@ -649,13 +885,13 @@ export default function AdminDashboard() {
               {/* ── CATEGORIES ── */}
               {activeTab === 'categories' && (
                 <div style={{ animation:'fadeIn 0.3s ease' }}>
-                  <PageHeader title="Categories" subtitle="Manage content categories" count={filtered.categories.length}
+                  <PageHeader title="Categories" subtitle="Manage content categories" count={categoriesData_paginated.totalItems}
                     action={<AddBtn label="Category" onClick={()=>openForm('category')} ac={ACCENT.categories} />}
                   />
                   <Table
                     cols={['Category','Description','Created','Actions']}
-                    icon={Layers} empty="No categories yet" loading={categoriesLoading}
-                    rows={filtered.categories.map(cat=>(
+                    icon={Layers} empty="No categories yet. Add a category to see it here." loading={contentTreeLoading} tabName="categories"
+                    rows={categoriesData_paginated.items.map(cat=>(
                       <tr key={cat._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -680,13 +916,13 @@ export default function AdminDashboard() {
               {/* ── SUBCATEGORIES ── */}
               {activeTab === 'subcategories' && (
                 <div style={{ animation:'fadeIn 0.3s ease' }}>
-                  <PageHeader title="Subcategories" subtitle="Manage content subcategories" count={filtered.subcategories.length}
+                  <PageHeader title="Subcategories" subtitle="Manage content subcategories" count={subcategoriesData_paginated.totalItems}
                     action={<AddBtn label="Subcategory" onClick={()=>openForm('subcategory')} ac={ACCENT.subcategories} />}
                   />
                   <Table
                     cols={['Subcategory','Category','Description','Created','Actions']}
-                    icon={FolderTree} empty="No subcategories yet" loading={subcategoriesLoading}
-                    rows={filtered.subcategories.map(sub=>(
+                    icon={FolderTree} empty="No subcategories yet" loading={contentTreeLoading} tabName="subcategories"
+                    rows={subcategoriesData_paginated.items.map(sub=>(
                       <tr key={sub._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -694,7 +930,7 @@ export default function AdminDashboard() {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{sub.name}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.subcategories.light, ACCENT.subcategories.text)}>{sub.category?.name||'—'}</span></td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.subcategories.light, ACCENT.subcategories.text)}>{typeof sub.category === 'string' ? categoryMap.get(sub.category) || '—' : sub.category?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(sub.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                         <td style={tdStyle}>
@@ -712,13 +948,13 @@ export default function AdminDashboard() {
               {/* ── TOPICS ── */}
               {activeTab === 'topics' && (
                 <div style={{ animation:'fadeIn 0.3s ease' }}>
-                  <PageHeader title="Topics" subtitle="Manage content topics" count={filtered.topics.length}
+                  <PageHeader title="Topics" subtitle="Manage content topics" count={topicsData_paginated.totalItems}
                     action={<AddBtn label="Topic" onClick={()=>openForm('topic')} ac={ACCENT.topics} />}
                   />
                   <Table
                     cols={['Topic','Subcategory','Description','Created','Actions']}
-                    icon={BookOpen} empty="No topics yet" loading={topicsLoading}
-                    rows={filtered.topics.map(topic=>(
+                    icon={BookOpen} empty="No topics yet" loading={contentTreeLoading} tabName="topics"
+                    rows={topicsData_paginated.items.map(topic=>(
                       <tr key={topic._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -726,7 +962,7 @@ export default function AdminDashboard() {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{topic.name}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.topics.light, ACCENT.topics.text)}>{topic.subcategory?.name||'—'}</span></td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.topics.light, ACCENT.topics.text)}>{typeof topic.subcategory === 'string' ? subcategoryMap.get(topic.subcategory) || '—' : topic.subcategory?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(topic.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                         <td style={tdStyle}>
@@ -744,13 +980,13 @@ export default function AdminDashboard() {
               {/* ── LETTERS ── */}
               {activeTab === 'letters' && (
                 <div style={{ animation:'fadeIn 0.3s ease' }}>
-                  <PageHeader title="Letters" subtitle="Manage all wellness letters" count={filtered.letters.length}
+                  <PageHeader title="Letters" subtitle="Manage all wellness letters" count={lettersData_paginated.totalItems}
                     action={<AddBtn label="Letter" onClick={()=>openForm('letter')} ac={ACCENT.letters} />}
                   />
                   <Table
                     cols={['Letter','Topic','Content Preview','Created','Actions']}
-                    icon={FileText} empty="No letters yet" loading={lettersLoading}
-                    rows={filtered.letters.map(letter=>(
+                    icon={FileText} empty="No letters yet" loading={contentTreeLoading} tabName="letters"
+                    rows={lettersData_paginated.items.map(letter=>(
                       <tr key={letter._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -758,7 +994,7 @@ export default function AdminDashboard() {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{letter.title}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{letter.topic?.name||'—'}</span></td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(letter.topic) || '—' : letter.topic?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(letter.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                         <td style={tdStyle}>

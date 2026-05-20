@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { useSubcategories, useTopicsBySubcategory } from '@/hooks/useContent';
+import { useContentTree } from '@/hooks/useContent';
 import Link from 'next/link';
 
 // Navigation Component
@@ -82,8 +82,7 @@ function TopicsContent() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
-  const { data: subcategoriesData } = useSubcategories();
-  const { data: topicsData, isLoading: topicsLoading } = useTopicsBySubcategory(subcategoryId);
+  const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
 
   useEffect(() => {
     setIsClient(true);
@@ -93,23 +92,18 @@ function TopicsContent() {
     if (userError) router.push('/login');
   }, [userError, router]);
 
-  useEffect(() => {
-    if (!subcategoryId && isClient) {
-      router.push('/dashboard-letters');
-    }
-  }, [subcategoryId, isClient, router]);
-
-  const subcategories = Array.isArray(subcategoriesData) ? subcategoriesData : [];
-  const topics = Array.isArray(topicsData) ? topicsData : [];
-  const currentSubcategory = subcategories.find(s => s._id === subcategoryId);
-  const categoryId = currentSubcategory?.categoryId;
+  const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
+  const subcategories = categories.flatMap((category) => category.subcategories || []);
+  const currentSubcategory = subcategories.find((s) => String(s._id) === String(subcategoryId));
+  const topics = currentSubcategory?.topics || [];
+  const categoryId = currentSubcategory?.category;
 
   const filteredTopics = topics.filter(topic =>
     topic.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     topic.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (!isClient || userLoading) {
+  if (!isClient || userLoading || contentTreeLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
         <div className="space-y-4">
@@ -176,7 +170,7 @@ function TopicsContent() {
         </div>
 
         {/* Topics Grid */}
-        {topicsLoading ? (
+        {contentTreeLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="space-y-4">
               <div className="w-12 h-12 border-4 border-violet-200 border-t-violet-500 rounded-full animate-spin mx-auto"></div>

@@ -7,6 +7,11 @@ const CategorySchema = new mongoose.Schema({
     trim: true,
     unique: true,
   },
+  slug: {
+    type: String,
+    trim: true,
+    unique: true,
+  },
   description: {
     type: String,
     trim: true,
@@ -16,6 +21,8 @@ const CategorySchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+
 
 // Clear existing model to prevent cache issues
 const Category = mongoose.models.Category || mongoose.model('Category', CategorySchema);

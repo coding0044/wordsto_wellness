@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { useCategories } from '@/hooks/useContent';
+import { useContentTree } from '@/hooks/useContent';
 import Link from 'next/link';
 
 // Navigation Component (same as dashboard)
@@ -108,7 +108,7 @@ function BrowseLettersContent() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
 
   useEffect(() => {
     setIsClient(true);
@@ -120,7 +120,7 @@ function BrowseLettersContent() {
     }
   }, [userError, router]);
 
-  const categories = Array.isArray(categoriesData) ? categoriesData : [];
+  const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
 
   // Filter categories based on search
   const filteredCategories = categories.filter(cat =>
@@ -191,7 +191,7 @@ function BrowseLettersContent() {
         </div>
 
         {/* Categories Grid */}
-        {categoriesLoading ? (
+        {contentTreeLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="space-y-4">
               <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
@@ -204,10 +204,10 @@ function BrowseLettersContent() {
               📚
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchQuery ? 'No categories found' : 'No categories available'}
+              {searchQuery ? 'No categories found' : 'No categories yet'}
             </h3>
             <p className="text-gray-600">
-              {searchQuery ? 'Try a different search term' : 'Categories will appear here once they\'re added.'}
+              {searchQuery ? 'Try a different search term.' : 'No categories are available yet. Once categories exist in the database, they will appear here.'}
             </p>
           </div>
         ) : (

@@ -6,6 +6,10 @@ const TopicSchema = new mongoose.Schema({
     required: [true, 'Please provide a topic name'],
     trim: true,
   },
+  slug: {
+    type: String,
+    trim: true,
+  },
   subcategory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subcategory',

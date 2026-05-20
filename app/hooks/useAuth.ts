@@ -209,7 +209,7 @@ export const useUsers = () => {
         throw new Error('No token found');
       }
       
-      const response = await fetch('/api/user/all', {
+      const response = await fetch('/api/auth/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -221,6 +221,6 @@ export const useUsers = () => {
       return data.users || [];
     },
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // No caching to ensure fresh data
   });
 };

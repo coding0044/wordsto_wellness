@@ -15,6 +15,18 @@ const LetterSchema = new mongoose.Schema({
     ref: 'Topic',
     required: [true, 'Please provide a topic'],
   },
+  letter_type: {
+    type: String,
+    trim: true,
+  },
+  level: {
+    type: String,
+    trim: true,
+  },
+  full_code: {
+    type: String,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

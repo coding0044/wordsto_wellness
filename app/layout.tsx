@@ -10,12 +10,15 @@ export const metadata = {
   title: 'Wordstowellness',
   description: 'Therapeutic letters and wellness platform',
   manifest: '/manifest.json',
-  themeColor: '#667eea',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Words to Wellness',
   },
+};
+
+export const viewport = {
+  themeColor: '#667eea',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

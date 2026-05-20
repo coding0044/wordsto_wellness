@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { useTopics, useLettersByTopic } from '@/hooks/useContent';
+import { useContentTree } from '@/hooks/useContent';
 import Link from 'next/link';
 
 // Navigation Component
@@ -56,7 +56,14 @@ function LetterCard({ letter }) {
         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-md">
           📄
         </div>
-        <span className="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-semibold uppercase tracking-wide">Letter</span>
+        <div className="flex flex-col gap-1 items-end">
+          {letter.full_code && (
+            <span className="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-semibold uppercase tracking-wide">{letter.full_code}</span>
+          )}
+          {letter.letter_type && letter.level && (
+            <span className="text-xs text-gray-500 font-medium">{letter.letter_type} - Level {letter.level}</span>
+          )}
+        </div>
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors line-clamp-2">{letter.title}</h3>
       {letter.content && (
@@ -82,8 +89,7 @@ function LettersViewContent() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
-  const { data: topicsData } = useTopics();
-  const { data: lettersData, isLoading: lettersLoading } = useLettersByTopic(topicId);
+  const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
 
   useEffect(() => {
     setIsClient(true);
@@ -99,16 +105,17 @@ function LettersViewContent() {
     }
   }, [topicId, isClient, router]);
 
-  const topics = Array.isArray(topicsData) ? topicsData : [];
-  const letters = Array.isArray(lettersData) ? lettersData : [];
-  const currentTopic = topics.find(t => t._id === topicId);
-
+  const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
+  const subcategories = categories.flatMap((category) => category.subcategories || []);
+  const topics = subcategories.flatMap((subcategory) => subcategory.topics || []);
+  const currentTopic = topics.find((t) => String(t._id) === String(topicId));
+  const letters = currentTopic?.letters || [];
   const filteredLetters = letters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     letter.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (!isClient || userLoading) {
+  if (!isClient || userLoading || contentTreeLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
         <div className="space-y-4">
@@ -132,7 +139,7 @@ function LettersViewContent() {
           <span>/</span>
           <Link href="/dashboard-letters" className="hover:text-sky-600 transition-colors">Categories</Link>
           <span>/</span>
-          <span className="text-gray-400">...</span>
+          <Link href={currentTopic ? `/dashboard-subcategories?cat=${currentTopic?.subcategory}` : '/dashboard-letters'} className="hover:text-sky-600 transition-colors">Subcategories</Link>
           <span>/</span>
           <span className="text-gray-900 font-medium">{currentTopic?.name || 'Letters'}</span>
         </div>
@@ -175,7 +182,7 @@ function LettersViewContent() {
         </div>
 
         {/* Letters Grid */}
-        {lettersLoading ? (
+        {contentTreeLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="space-y-4">
               <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>

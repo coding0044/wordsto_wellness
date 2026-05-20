@@ -1,6 +1,8 @@
+// app/api/admin/categories/route.js
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/db';
-import Letter from '../../../lib/models/Letter';
+import Category from '../../../lib/models/Category';
+import Subcategory from '../../../lib/models/Subcategory';
 import { verifyToken } from '../../../lib/auth';
 
 export async function GET(request) {
@@ -19,21 +21,43 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const letters = await Letter.find({})
-      .populate({
-        path: 'topic',
-        populate: {
-          path: 'subcategory',
-          populate: {
-            path: 'category',
-            select: 'name'
-          }
-        }
-      })
-      .sort({ createdAt: -1 });
-    return NextResponse.json({ letters });
+    // Get pagination and search parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    
+    const skip = (page - 1) * limit;
+    
+    // Build search query
+    let query = {};
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+    
+    // Get total count for pagination
+    const total = await Category.countDocuments(query);
+    
+    // Get paginated categories
+    const categories = await Category.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    // Return paginated response
+    return NextResponse.json({
+      data: categories,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    });
   } catch (error) {
-    console.error('Error fetching letters:', error);
+    console.error('Error fetching categories:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -54,34 +78,28 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { title, topic, content } = await request.json();
+    const { name, slug, description } = await request.json();
 
-    if (!title || !topic || !content) {
-      return NextResponse.json({ error: 'Letter title, topic, and content are required' }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
     }
 
-    const letter = new Letter({
-      title: title.trim(),
-      topic,
-      content: content.trim(),
+    const category = new Category({
+      name: name.trim(),
+      slug: slug?.trim(),
+      description: description?.trim(),
     });
 
-    await letter.save();
-    await letter.populate({
-      path: 'topic',
-      populate: {
-        path: 'subcategory',
-        populate: {
-          path: 'category',
-          select: 'name'
-        }
-      }
-    });
-    return NextResponse.json({ letter }, { status: 201 });
+    await category.save();
+    
+    return NextResponse.json({ 
+      data: category,
+      message: 'Category created successfully' 
+    }, { status: 201 });
   } catch (error) {
-    console.error('Error creating letter:', error);
+    console.error('Error creating category:', error);
     if (error.code === 11000) {
-      return NextResponse.json({ error: 'Letter title already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'Category name already exists' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -103,34 +121,31 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id, title, content, topic } = await request.json();
+    const { id, name, slug, description } = await request.json();
 
-    if (!id || !title || !content || !topic) {
-      return NextResponse.json({ error: 'Letter ID, title, content, and topic are required' }, { status: 400 });
+    if (!id || !name) {
+      return NextResponse.json({ error: 'Category ID and name are required' }, { status: 400 });
     }
 
-    const letter = await Letter.findByIdAndUpdate(
+    const category = await Category.findByIdAndUpdate(
       id,
-      { title: title.trim(), content, topic },
+      { name: name.trim(), slug: slug?.trim(), description: description?.trim() },
       { new: true, runValidators: true }
-    ).populate({
-      path: 'topic',
-      populate: {
-        path: 'subcategory',
-        populate: {
-          path: 'category',
-          select: 'name'
-        }
-      }
-    });
+    );
 
-    if (!letter) {
-      return NextResponse.json({ error: 'Letter not found' }, { status: 404 });
+    if (!category) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ letter });
+    return NextResponse.json({ 
+      data: category,
+      message: 'Category updated successfully' 
+    });
   } catch (error) {
-    console.error('Error updating letter:', error);
+    console.error('Error updating category:', error);
+    if (error.code === 11000) {
+      return NextResponse.json({ error: 'Category name already exists' }, { status: 400 });
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -154,18 +169,24 @@ export async function DELETE(request) {
     const { id } = await request.json();
 
     if (!id) {
-      return NextResponse.json({ error: 'Letter ID is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
 
-    const letter = await Letter.findByIdAndDelete(id);
-
-    if (!letter) {
-      return NextResponse.json({ error: 'Letter not found' }, { status: 404 });
+    // Check if category has subcategories
+    const subcategoriesCount = await Subcategory.countDocuments({ category: id });
+    if (subcategoriesCount > 0) {
+      return NextResponse.json({ error: 'Cannot delete category with existing subcategories' }, { status: 400 });
     }
 
-    return NextResponse.json({ message: 'Letter deleted successfully' });
+    const category = await Category.findByIdAndDelete(id);
+
+    if (!category) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Category deleted successfully' });
   } catch (error) {
-    console.error('Error deleting letter:', error);
+    console.error('Error deleting category:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,34 +1,43 @@
 'use client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-interface Category {
+export interface Category {
   _id: string;
   name: string;
+  slug: string;
   description?: string;
   createdAt: string;
+  subcategories?: Subcategory[];
 }
 
-interface Subcategory {
+export interface Subcategory {
   _id: string;
   name: string;
+  slug?: string;
   description?: string;
-  category: Category;
+  category: string | Category;
   createdAt: string;
+  topics?: Topic[];
 }
 
-interface Topic {
+export interface Topic {
   _id: string;
   name: string;
+  slug?: string;
   description?: string;
-  subcategory: Subcategory;
+  subcategory: string | Subcategory;
   createdAt: string;
+  letters?: Letter[];
 }
 
-interface Letter {
+export interface Letter {
   _id: string;
   title: string;
   content: string;
-  topic: Topic;
+  topic: string | Topic;
+  letter_type?: string;
+  level?: string;
+  full_code?: string;
   createdAt: string;
 }
 
@@ -65,7 +74,10 @@ export const useCategories = () => {
         throw new Error('Failed to fetch categories');
       }
       const data = await response.json();
-      return data.categories || [];
+      if (Array.isArray(data.categories)) return data.categories;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -81,7 +93,10 @@ export const useSubcategories = () => {
         throw new Error('Failed to fetch subcategories');
       }
       const data = await response.json();
-      return data.subcategories || [];
+      if (Array.isArray(data.subcategories)) return data.subcategories;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -97,7 +112,10 @@ export const useTopics = () => {
         throw new Error('Failed to fetch topics');
       }
       const data = await response.json();
-      return data.topics || [];
+      if (Array.isArray(data.topics)) return data.topics;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -113,7 +131,29 @@ export const useLetters = () => {
         throw new Error('Failed to fetch letters');
       }
       const data = await response.json();
-      return data.letters || [];
+      if (Array.isArray(data.letters)) return data.letters;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get full content tree (categories with nested subcategories, topics, and letters)
+export const useContentTree = () => {
+  return useQuery<Category[], Error>({
+    queryKey: ['contentTree'],
+    queryFn: async () => {
+      const response = await fetch('/api/public/content-tree');
+      if (!response.ok) {
+        throw new Error('Failed to fetch content tree');
+      }
+      const data = await response.json();
+      if (Array.isArray(data.categories)) return data.categories;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -129,7 +169,10 @@ export const useSubcategoriesByCategory = (categoryId: string) => {
         throw new Error('Failed to fetch subcategories');
       }
       const data = await response.json();
-      return data.subcategories || [];
+      if (Array.isArray(data.subcategories)) return data.subcategories;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -146,7 +189,10 @@ export const useTopicsBySubcategory = (subcategoryId: string) => {
         throw new Error('Failed to fetch topics');
       }
       const data = await response.json();
-      return data.topics || [];
+      if (Array.isArray(data.topics)) return data.topics;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     enabled: !!subcategoryId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -163,7 +209,10 @@ export const useLettersByTopic = (topicId: string) => {
         throw new Error('Failed to fetch letters');
       }
       const data = await response.json();
-      return data.letters || [];
+      if (Array.isArray(data.letters)) return data.letters;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      return [];
     },
     enabled: !!topicId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -191,11 +240,13 @@ export const useCreateCategory = () => {
         throw new Error(errorData.message || 'Failed to create category');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.category;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -220,10 +271,12 @@ export const useUpdateCategory = () => {
         throw new Error(errorData.message || 'Failed to update category');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.category;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -251,6 +304,7 @@ export const useDeleteCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -275,11 +329,13 @@ export const useCreateSubcategory = () => {
         throw new Error(errorData.message || 'Failed to create subcategory');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.subcategory;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -304,10 +360,12 @@ export const useUpdateSubcategory = () => {
         throw new Error(errorData.message || 'Failed to update subcategory');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.subcategory;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -335,6 +393,7 @@ export const useDeleteSubcategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -359,11 +418,13 @@ export const useCreateTopic = () => {
         throw new Error(errorData.message || 'Failed to create topic');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.topic;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['letters'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -388,10 +449,12 @@ export const useUpdateTopic = () => {
         throw new Error(errorData.message || 'Failed to update topic');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.topic;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -419,6 +482,7 @@ export const useDeleteTopic = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['letters'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -443,10 +507,12 @@ export const useCreateLetter = () => {
         throw new Error(errorData.message || 'Failed to create letter');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.letter;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['letters'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
@@ -471,10 +537,12 @@ export const useUpdateLetter = () => {
         throw new Error(errorData.message || 'Failed to update letter');
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.letter;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['letters'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };
