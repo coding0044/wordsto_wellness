@@ -14,8 +14,10 @@ import {
   LayoutDashboard, FileText, Users, FolderTree, LogOut,
   Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,
   Layers, BookOpen, ChevronRight, TrendingUp, Bell,
-  ChevronLeft, ChevronsLeft, ChevronsRight
+  ChevronLeft, ChevronsLeft, ChevronsRight, Eye, EyeOff
 } from 'lucide-react';
+
+
 
 const NAV_ITEMS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
@@ -192,6 +194,7 @@ export default function AdminDashboard() {
   const [formType, setFormType]     = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isClient, setIsClient]     = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notification, setNotification] = useState(null);
@@ -260,6 +263,7 @@ export default function AdminDashboard() {
 
   const openForm = (type, item = null) => {
     setFormType(type);
+    setShowPassword(false);
     if (item) {
       setEditingItem(item);
       setFormData({
@@ -286,7 +290,7 @@ export default function AdminDashboard() {
     setShowForm(true);
   };
 
-  const closeForm = () => { setShowForm(false); setFormData({}); setFormType(''); setEditingItem(null); };
+  const closeForm = () => { setShowForm(false); setFormData({}); setFormType(''); setEditingItem(null); setShowPassword(false); };
 
   const handleDelete = (type, id) => {
     if (!confirm(`Delete this ${type}?`)) return;
@@ -479,9 +483,38 @@ export default function AdminDashboard() {
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Email *</label>
                   <input type="email" placeholder="Enter email address" value={formData.email||''} onChange={e=>setFormData({...formData,email:e.target.value})} required style={inputCls} />
                 </div>
-                <div>
+                <div style={{ position:'relative' }}>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>{editingItem ? 'New Password (optional)' : 'Password *'}</label>
-                  <input type="password" placeholder={editingItem ? 'Leave blank to keep current password' : 'Enter password'} value={formData.password||''} onChange={e=>setFormData({...formData,password:e.target.value})} required={!editingItem} style={inputCls} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={editingItem ? 'Leave blank to keep current password' : 'Enter password'}
+                    value={formData.password||''}
+                    onChange={e=>setFormData({...formData,password:e.target.value})}
+                    required={!editingItem}
+                    style={inputCls}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    style={{
+                      position:'absolute',
+                      right:12,
+                      top:40,
+                      border:'none',
+                      background:'transparent',
+                      color:'#475569',
+                      fontSize:13,
+                      cursor:'pointer',
+                      padding:'0 6px'
+                    }}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                  {editingItem && (
+                    <p style={{ margin: '8px 0 0', color:'#64748b', fontSize:12 }}>
+                      Current password is hidden for security. Enter a new password only if you want to change it.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Role *</label>
@@ -493,22 +526,50 @@ export default function AdminDashboard() {
               </>
             )}
             {formType === 'subcategory' && (
-              <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Category *</label>
-                <select value={formData.category||''} onChange={e=>setFormData({...formData,category:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
-                  <option value="">Choose a category…</option>
-                  {categories.map(c=><option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
-              </div>
+              <>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Category *</label>
+                  <select value={formData.category||''} onChange={e=>setFormData({...formData,category:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                    <option value="">Choose a category…</option>
+                    {categories.map(c=><option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Name *</label>
+                  <input type="text" placeholder="Enter subcategory name" value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Slug</label>
+                  <input type="text" placeholder="URL-friendly identifier (optional)" value={formData.slug||''} onChange={e=>setFormData({...formData,slug:e.target.value})} style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Description</label>
+                  <textarea placeholder="Optional description…" value={formData.description||''} onChange={e=>setFormData({...formData,description:e.target.value})} rows={3} style={{...inputCls,resize:'vertical'}} />
+                </div>
+              </>
             )}
             {formType === 'topic' && (
-              <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Subcategory *</label>
-                <select value={formData.subcategory||''} onChange={e=>setFormData({...formData,subcategory:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
-                  <option value="">Choose a subcategory…</option>
-                  {subcategories.map(s=><option key={s._id} value={s._id}>{s.name}</option>)}
-                </select>
-              </div>
+              <>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Subcategory *</label>
+                  <select value={formData.subcategory||''} onChange={e=>setFormData({...formData,subcategory:e.target.value})} required style={{...inputCls,cursor:'pointer'}}>
+                    <option value="">Choose a subcategory…</option>
+                    {subcategories.map(s=><option key={s._id} value={s._id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Name *</label>
+                  <input type="text" placeholder="Enter topic name" value={formData.name||''} onChange={e=>setFormData({...formData,name:e.target.value})} required style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Slug</label>
+                  <input type="text" placeholder="URL-friendly identifier (optional)" value={formData.slug||''} onChange={e=>setFormData({...formData,slug:e.target.value})} style={inputCls} />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Description</label>
+                  <textarea placeholder="Optional description…" value={formData.description||''} onChange={e=>setFormData({...formData,description:e.target.value})} rows={3} style={{...inputCls,resize:'vertical'}} />
+                </div>
+              </>
             )}
             {formType === 'letter' && (
               <>

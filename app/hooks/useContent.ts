@@ -419,7 +419,7 @@ export const useCreateTopic = () => {
       }
       
       const result = await response.json();
-      return result.topic;
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics'] });
@@ -450,7 +450,7 @@ export const useUpdateTopic = () => {
       }
       
       const result = await response.json();
-      return result.topic;
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics'] });
@@ -569,6 +569,7 @@ export const useDeleteLetter = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['letters'] });
+      queryClient.invalidateQueries({ queryKey: ['contentTree'] });
     },
   });
 };

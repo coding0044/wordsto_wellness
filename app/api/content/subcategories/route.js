@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/db';
 import Subcategory from '../../../lib/models/Subcategory';
 import Topic from '../../../lib/models/Topic';
+import Letter from '../../../lib/models/Letter';
 import { verifyToken } from '../../../lib/auth';
 
 export async function GET(request) {
@@ -173,10 +174,13 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Subcategory ID is required' }, { status: 400 });
     }
 
-    // Check if subcategory has topics
-    const topicsCount = await Topic.countDocuments({ subcategory: id });
-    if (topicsCount > 0) {
-      return NextResponse.json({ error: 'Cannot delete subcategory with existing topics' }, { status: 400 });
+    // Delete any nested letters and topics before removing the subcategory
+    const topics = await Topic.find({ subcategory: id }).select('_id');
+    const topicIds = topics.map((topic) => topic._id);
+
+    if (topicIds.length > 0) {
+      await Letter.deleteMany({ topic: { $in: topicIds } });
+      await Topic.deleteMany({ subcategory: id });
     }
 
     const subcategory = await Subcategory.findByIdAndDelete(id);
