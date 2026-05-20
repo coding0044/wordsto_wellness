@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/db';
 import Letter from '../../../lib/models/Letter';
+import Topic from '../../../lib/models/Topic';
+
+function getId(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value.toString === 'function') return value.toString();
+  return String(value);
+}
 
 function normalizeLetter(letter) {
   const topicValue = letter.topic ?? letter['topic'] ?? letter['topic_id'] ?? letter['`topic_id`'];
@@ -25,10 +33,26 @@ export async function GET(request) {
 
     const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
     const normalizedLetters = letters.map(normalizeLetter);
+
+    const topicAliasMap = {};
+    if (topicId) {
+      const topics = await Topic.find({}).lean();
+      topics.forEach((topic) => {
+        const normalizedTopicId = getId(topic._id ?? topic.id ?? topic['`id`']);
+        const legacyTopicId = getId(topic.id ?? topic['`id`']);
+        if (legacyTopicId && legacyTopicId !== normalizedTopicId) {
+          topicAliasMap[legacyTopicId] = normalizedTopicId;
+        }
+        topicAliasMap[normalizedTopicId] = normalizedTopicId;
+      });
+    }
+
     const filtered = topicId
       ? normalizedLetters.filter((letter) => {
-          const letterTopicId = letter.topic?._id ? String(letter.topic._id) : String(letter.topic);
-          return letterTopicId === String(topicId);
+          const expectedTopicId = topicAliasMap[topicId] || topicId;
+          const letterTopicId = letter.topic;
+          const normalizedLetterTopicId = topicAliasMap[letterTopicId] || letterTopicId;
+          return normalizedLetterTopicId === expectedTopicId;
         })
       : normalizedLetters;
     return NextResponse.json({ letters: filtered });

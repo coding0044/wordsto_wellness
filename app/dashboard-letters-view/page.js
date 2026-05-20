@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { useContentTree } from '@/hooks/useContent';
+import { useContentTree, useLettersByTopic } from '@/hooks/useContent';
 import Link from 'next/link';
 
 // Navigation Component
@@ -90,7 +90,9 @@ function LettersViewContent() {
 
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
   const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
+  const { data: lettersByTopic, isLoading: lettersByTopicLoading } = useLettersByTopic(topicId || '');
 
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -109,13 +111,16 @@ function LettersViewContent() {
   const subcategories = categories.flatMap((category) => category.subcategories || []);
   const topics = subcategories.flatMap((subcategory) => subcategory.topics || []);
   const currentTopic = topics.find((t) => String(t._id) === String(topicId));
-  const letters = currentTopic?.letters || [];
+  const letters = (currentTopic?.letters && currentTopic.letters.length > 0)
+    ? currentTopic.letters
+    : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
   const filteredLetters = letters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     letter.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const currentTopicDisplayName = currentTopic?.name || (topicId ? `Topic ${topicId}` : 'Letters');
 
-  if (!isClient || userLoading || contentTreeLoading) {
+  if (!isClient || userLoading || (topicId && lettersByTopicLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
         <div className="space-y-4">
@@ -141,7 +146,7 @@ function LettersViewContent() {
           <span>/</span>
           <Link href={currentTopic ? `/dashboard-subcategories?cat=${currentTopic?.subcategory}` : '/dashboard-letters'} className="hover:text-sky-600 transition-colors">Subcategories</Link>
           <span>/</span>
-          <span className="text-gray-900 font-medium">{currentTopic?.name || 'Letters'}</span>
+          <span className="text-gray-900 font-medium">{currentTopicDisplayName}</span>
         </div>
 
         {/* Header */}
@@ -159,7 +164,7 @@ function LettersViewContent() {
               📄
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{currentTopic?.name || 'Letters'}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{currentTopicDisplayName}</h1>
               <p className="text-gray-600">{letters.length} letters available</p>
             </div>
           </div>

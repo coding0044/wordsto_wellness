@@ -70,15 +70,25 @@ export async function GET(request) {
     const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
 
     const topicMap = {};
+    const topicAliasMap = {};
+
     topics.forEach((topic) => {
       const normalizedTopic = normalizeTopic(topic);
       topicMap[normalizedTopic._id] = normalizedTopic;
+
+      const legacyTopicId = getId(topic.id ?? topic['`id`']);
+      if (legacyTopicId && legacyTopicId !== normalizedTopic._id) {
+        topicAliasMap[legacyTopicId] = normalizedTopic._id;
+      }
     });
 
     const letterMap = {};
     letters.forEach((letter) => {
       const normalizedLetter = normalizeLetter(letter);
-      const topicId = normalizedLetter.topic;
+      let topicId = normalizedLetter.topic;
+      if (!topicMap[topicId] && topicAliasMap[topicId]) {
+        topicId = topicAliasMap[topicId];
+      }
       letterMap[topicId] = letterMap[topicId] || [];
       letterMap[topicId].push(normalizedLetter);
     });
