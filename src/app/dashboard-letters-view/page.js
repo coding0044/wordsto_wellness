@@ -85,7 +85,7 @@ function LettersViewContent() {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const topicId = searchParams.get('topic');
+  const topicId = searchParams.get('topic') || searchParams.get('topicId');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();

@@ -5,6 +5,21 @@ import Subcategory from '../../../lib/models/Subcategory';
 import Topic from '../../../lib/models/Topic';
 import Letter from '../../../lib/models/Letter';
 
+function isString(value) {
+  return typeof value === 'string';
+}
+
+function toSafeString(value) {
+  if (isString(value)) return value;
+  if (value === null || value === undefined) return '';
+  if (typeof value.toString === 'function') return value.toString();
+  return String(value);
+}
+
+function toSafeLowerCase(value) {
+  return isString(value) ? value.toLowerCase() : '';
+}
+
 function getId(value) {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
@@ -76,7 +91,13 @@ export async function GET(request) {
       const normalizedTopic = normalizeTopic(topic);
       topicMap[normalizedTopic._id] = normalizedTopic;
 
-      const legacyTopicId = getId(topic.id ?? topic['`id`']);
+      const topicSlug = toSafeLowerCase(topic.slug ?? topic['`slug`']);
+      const topicName = toSafeLowerCase(topic.name ?? topic['`name`']);
+      const legacyTopicId = toSafeString(topic.id ?? topic['`id`']);
+
+      topicAliasMap[normalizedTopic._id] = normalizedTopic._id;
+      if (topicSlug) topicAliasMap[topicSlug] = normalizedTopic._id;
+      if (topicName) topicAliasMap[topicName] = normalizedTopic._id;
       if (legacyTopicId && legacyTopicId !== normalizedTopic._id) {
         topicAliasMap[legacyTopicId] = normalizedTopic._id;
       }
@@ -85,9 +106,10 @@ export async function GET(request) {
     const letterMap = {};
     letters.forEach((letter) => {
       const normalizedLetter = normalizeLetter(letter);
-      let topicId = normalizedLetter.topic;
-      if (!topicMap[topicId] && topicAliasMap[topicId]) {
-        topicId = topicAliasMap[topicId];
+      let topicId = toSafeString(normalizedLetter.topic);
+      const lookupKey = toSafeLowerCase(topicId);
+      if (!topicMap[topicId] && topicAliasMap[lookupKey]) {
+        topicId = topicAliasMap[lookupKey];
       }
       letterMap[topicId] = letterMap[topicId] || [];
       letterMap[topicId].push(normalizedLetter);

@@ -3,6 +3,21 @@ import dbConnect from '../../../lib/db';
 import Letter from '../../../lib/models/Letter';
 import Topic from '../../../lib/models/Topic';
 
+function isString(value) {
+  return typeof value === 'string';
+}
+
+function toSafeString(value) {
+  if (isString(value)) return value;
+  if (value === null || value === undefined) return '';
+  if (typeof value.toString === 'function') return value.toString();
+  return String(value);
+}
+
+function toSafeLowerCase(value) {
+  return isString(value) ? value.toLowerCase() : '';
+}
+
 function getId(value) {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
@@ -29,7 +44,7 @@ export async function GET(request) {
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
-    const topicId = searchParams.get('topicId');
+    const topicId = toSafeString(searchParams.get('topicId') || searchParams.get('topic'));
 
     const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
     const normalizedLetters = letters.map(normalizeLetter);
@@ -38,20 +53,27 @@ export async function GET(request) {
     if (topicId) {
       const topics = await Topic.find({}).lean();
       topics.forEach((topic) => {
-        const normalizedTopicId = getId(topic._id ?? topic.id ?? topic['`id`']);
-        const legacyTopicId = getId(topic.id ?? topic['`id`']);
+        const normalizedTopicId = toSafeString(topic._id ?? topic.id ?? topic['`id`']);
+        const topicSlug = toSafeLowerCase(topic.slug ?? topic['`slug`']);
+        const topicName = toSafeLowerCase(topic.name ?? topic['`name`']);
+        const legacyTopicId = toSafeString(topic.id ?? topic['`id`']);
+
+        topicAliasMap[normalizedTopicId] = normalizedTopicId;
+        if (topicSlug) topicAliasMap[topicSlug] = normalizedTopicId;
+        if (topicName) topicAliasMap[topicName] = normalizedTopicId;
         if (legacyTopicId && legacyTopicId !== normalizedTopicId) {
           topicAliasMap[legacyTopicId] = normalizedTopicId;
         }
-        topicAliasMap[normalizedTopicId] = normalizedTopicId;
       });
     }
 
     const filtered = topicId
       ? normalizedLetters.filter((letter) => {
-          const expectedTopicId = topicAliasMap[topicId] || topicId;
-          const letterTopicId = letter.topic;
-          const normalizedLetterTopicId = topicAliasMap[letterTopicId] || letterTopicId;
+          const normalizedQueryTopic = toSafeLowerCase(topicId);
+          const expectedTopicId = topicAliasMap[normalizedQueryTopic] || topicId;
+          const letterTopicId = toSafeString(letter.topic);
+          const normalizedLetterTopic = toSafeLowerCase(letterTopicId);
+          const normalizedLetterTopicId = topicAliasMap[normalizedLetterTopic] || letterTopicId;
           return normalizedLetterTopicId === expectedTopicId;
         })
       : normalizedLetters;
