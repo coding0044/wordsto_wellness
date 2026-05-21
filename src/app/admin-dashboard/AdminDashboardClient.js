@@ -239,9 +239,9 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
   const topics       = useMemo(() => subcategories.flatMap((subcategory) => subcategory.topics || []), [subcategories]);
   const letters      = useMemo(() => topics.flatMap((topic) => topic.letters || []), [topics]);
 
-  const categoryMap = useMemo(() => new Map(categories.map(c => [c._id, c.name])), [categories]);
-  const subcategoryMap = useMemo(() => new Map(subcategories.map(s => [s._id, s.name])), [subcategories]);
-  const topicMap = useMemo(() => new Map(topics.map(t => [t._id, t.name])), [topics]);
+  const categoryMap = useMemo(() => new Map(categories.map(c => [String(c._id), c.name])), [categories]);
+  const subcategoryMap = useMemo(() => new Map(subcategories.map(s => [String(s._id), s.name])), [subcategories]);
+  const topicMap = useMemo(() => new Map(topics.map(t => [String(t._id), t.name])), [topics]);
 
   const createCategoryMutation    = useCreateCategory();
   const updateCategoryMutation    = useUpdateCategory();
@@ -284,9 +284,9 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
         password: '',
         description: item.description || '',
         slug: item.slug || '',
-        category: item.category?._id || item.category || '',
-        subcategory: item.subcategory?._id || item.subcategory || '',
-        topic: item.topic?._id || item.topic || '',
+        category: item.category?._id || item.category?.id || item.category || '',
+        subcategory: item.subcategory?._id || item.subcategory?.id || item.subcategory || '',
+        topic: item.topic?._id || item.topic?.id || item.topic || '',
         title: item.title || '',
         content: item.content || '',
         letter_type: item.letter_type || '',
@@ -1054,7 +1054,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{letter.title}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(letter.topic) || '—' : letter.topic?.name || '—'}</span></td>
+                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(String(letter.topic)) || '—' : letter.topic?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(letter.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                         <td style={tdStyle}>
