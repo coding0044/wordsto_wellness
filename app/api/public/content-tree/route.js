@@ -4,32 +4,11 @@ import Category from '../../../lib/models/Category';
 import Subcategory from '../../../lib/models/Subcategory';
 import Topic from '../../../lib/models/Topic';
 import Letter from '../../../lib/models/Letter';
-
-function isString(value) {
-  return typeof value === 'string';
-}
-
-function toSafeString(value) {
-  if (isString(value)) return value;
-  if (value === null || value === undefined) return '';
-  if (typeof value.toString === 'function') return value.toString();
-  return String(value);
-}
-
-function toSafeLowerCase(value) {
-  return isString(value) ? value.toLowerCase() : '';
-}
-
-function getId(value) {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value.toString === 'function') return value.toString();
-  return String(value);
-}
+import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/apiUtils';
 
 function normalizeCategory(category) {
   return {
-    _id: getId(category._id ?? category.id ?? category['`id`']),
+    _id: normalizeId(category._id ?? category.id ?? category['`id`']),
     name: category.name ?? category['`name`'] ?? category['name'] ?? '',
     slug: category.slug ?? category['`slug`'] ?? category['slug'] ?? '',
     description: category.description ?? category['`description`'] ?? category['description'] ?? '',
@@ -40,11 +19,11 @@ function normalizeCategory(category) {
 
 function normalizeSubcategory(subcategory) {
   return {
-    _id: getId(subcategory._id ?? subcategory.id ?? subcategory['`id`']),
+    _id: normalizeId(subcategory._id ?? subcategory.id ?? subcategory['`id`']),
     name: subcategory.name ?? subcategory['`name`'] ?? subcategory['name'] ?? '',
     slug: subcategory.slug ?? subcategory['`slug`'] ?? subcategory['slug'] ?? '',
     description: subcategory.description ?? subcategory['`description`'] ?? subcategory['description'] ?? '',
-    category: getId(subcategory.category?._id ?? subcategory.category ?? subcategory.category?.id ?? subcategory.category?.['`id`'] ?? subcategory['category_id'] ?? subcategory['`category_id`']),
+    category: normalizeId(subcategory.category?._id ?? subcategory.category ?? subcategory.category?.id ?? subcategory.category?.['`id`'] ?? subcategory['category_id'] ?? subcategory['`category_id`']),
     createdAt: subcategory.createdAt ?? subcategory['`created_at`'] ?? subcategory['created_at'] ?? null,
     topics: [],
   };
@@ -52,11 +31,11 @@ function normalizeSubcategory(subcategory) {
 
 function normalizeTopic(topic) {
   return {
-    _id: getId(topic._id ?? topic.id ?? topic['`id`']),
+    _id: normalizeId(topic._id ?? topic.id ?? topic['`id`']),
     name: topic.name ?? topic['`name`'] ?? topic['name'] ?? '',
     slug: topic.slug ?? topic['`slug`'] ?? topic['slug'] ?? '',
     description: topic.description ?? topic['`description`'] ?? topic['description'] ?? '',
-    subcategory: getId(topic.subcategory?._id ?? topic.subcategory ?? topic.subcategory?.id ?? topic.subcategory?.['`id`'] ?? topic['subcategory_id'] ?? topic['`subcategory_id`']),
+    subcategory: normalizeId(topic.subcategory?._id ?? topic.subcategory ?? topic.subcategory?.id ?? topic.subcategory?.['`id`'] ?? topic['subcategory_id'] ?? topic['`subcategory_id`']),
     createdAt: topic.createdAt ?? topic['`created_at`'] ?? topic['created_at'] ?? null,
     letters: [],
   };
@@ -64,10 +43,10 @@ function normalizeTopic(topic) {
 
 function normalizeLetter(letter) {
   return {
-    _id: getId(letter._id ?? letter.id ?? letter['`id`']),
+    _id: normalizeId(letter._id ?? letter.id ?? letter['`id`']),
     title: letter.title ?? letter['`title`'] ?? letter['title'] ?? '',
     content: letter.content ?? letter['`content`'] ?? letter['content'] ?? '',
-    topic: getId(letter.topic?._id ?? letter.topic ?? letter.topic?.id ?? letter.topic?.['`id`'] ?? letter['topic_id'] ?? letter['`topic_id`']),
+    topic: normalizeId(letter.topic?._id ?? letter.topic ?? letter.topic?.id ?? letter.topic?.['`id`'] ?? letter['topic_id'] ?? letter['`topic_id`']),
     letter_type: letter.letter_type ?? letter['`letter_type`'] ?? letter['letter_type'] ?? '',
     level: letter.level ?? letter['`level`'] ?? letter['level'] ?? '',
     full_code: letter.full_code ?? letter['`full_code`'] ?? letter['full_code'] ?? '',
@@ -93,7 +72,7 @@ export async function GET(request) {
 
       const topicSlug = toSafeLowerCase(topic.slug ?? topic['`slug`']);
       const topicName = toSafeLowerCase(topic.name ?? topic['`name`']);
-      const legacyTopicId = toSafeString(topic.id ?? topic['`id`']);
+      const legacyTopicId = normalizeId(topic.id ?? topic['`id`']);
 
       topicAliasMap[normalizedTopic._id] = normalizedTopic._id;
       if (topicSlug) topicAliasMap[topicSlug] = normalizedTopic._id;
@@ -106,7 +85,7 @@ export async function GET(request) {
     const letterMap = {};
     letters.forEach((letter) => {
       const normalizedLetter = normalizeLetter(letter);
-      let topicId = toSafeString(normalizedLetter.topic);
+      let topicId = normalizeId(normalizedLetter.topic);
       const lookupKey = toSafeLowerCase(topicId);
       if (!topicMap[topicId] && topicAliasMap[lookupKey]) {
         topicId = topicAliasMap[lookupKey];

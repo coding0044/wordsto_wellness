@@ -1,29 +1,8 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Letter from '@/lib/models/Letter';
-import Topic from '@/lib/models/Topic';
-
-function isString(value) {
-  return typeof value === 'string';
-}
-
-function toSafeString(value) {
-  if (isString(value)) return value;
-  if (value === null || value === undefined) return '';
-  if (typeof value.toString === 'function') return value.toString();
-  return String(value);
-}
-
-function toSafeLowerCase(value) {
-  return isString(value) ? value.toLowerCase() : '';
-}
-
-function getId(value) {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value.toString === 'function') return value.toString();
-  return String(value);
-}
+import dbConnect from '../../../lib/db';
+import Letter from '../../../lib/models/Letter';
+import Topic from '../../../lib/models/Topic';
+import { normalizeId, toSafeLowerCase, toSafeString } from '../../../lib/apiUtils';
 
 function normalizeLetter(letter) {
   const topicValue = letter.topic ?? letter['topic'] ?? letter['topic_id'] ?? letter['`topic_id`'];
