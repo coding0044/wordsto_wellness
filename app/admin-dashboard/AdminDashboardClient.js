@@ -11,6 +11,12 @@ import {
   useCreateLetter, useUpdateLetter, useDeleteLetter
 } from '@/hooks/useContent';
 import {
+  logout as logoutService,
+  deleteAdminUser,
+  createAdminUser,
+  updateAdminUser,
+} from '@/services/authService';
+import {
   LayoutDashboard, FileText, Users, FolderTree, LogOut,
   Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,
   Layers, BookOpen, ChevronRight, TrendingUp, Bell,
@@ -259,7 +265,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await logoutService();
       localStorage.removeItem('token');
       router.push('/login');
     } catch (e) { console.error(e); }
@@ -299,8 +305,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
   const handleDelete = (type, id) => {
     if (!confirm(`Delete this ${type}?`)) return;
     if (type === 'user') {
-      fetch(`/api/auth/admin/users?id=${id}`, { method: 'DELETE' })
-        .then(res => res.json())
+      deleteAdminUser(id)
         .then(() => {
           showNotification('User deleted successfully');
           queryClient.invalidateQueries(['users']);
@@ -333,21 +338,11 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
       const d = { name: formData.name, email: formData.email, role: formData.role };
       if (formData.password) d.password = formData.password;
       if (editingItem) {
-        fetch(`/api/auth/admin/users?id=${editingItem._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(d)
-        })
-          .then(res => res.json())
+        updateAdminUser(editingItem._id, d)
           .then(() => { showNotification('User updated successfully'); closeForm(); queryClient.invalidateQueries(['users']); })
           .catch(error => showNotification(error.message || 'Failed to update user', 'error'));
       } else {
-        fetch('/api/auth/admin/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(d)
-        })
-          .then(res => res.json())
+        createAdminUser(d)
           .then(() => { showNotification('User created successfully'); closeForm(); queryClient.invalidateQueries(['users']); })
           .catch(error => showNotification(error.message || 'Failed to create user', 'error'));
       }

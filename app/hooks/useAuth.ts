@@ -1,64 +1,26 @@
 'use client';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface SignupData {
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
-interface ForgotPasswordData {
-  email: string;
-}
-
-interface ResetPasswordData {
-  token: string;
-  password: string;
-}
-
-interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import {
+  login as loginService,
+  signup as signupService,
+  getCurrentUser as fetchCurrentUser,
+  forgotPassword as forgotPasswordService,
+  resetPassword as resetPasswordService,
+  getAdminUsers as fetchAdminUsers,
+  AuthResponse,
+  User,
+  LoginData,
+  SignupData,
+  ForgotPasswordData,
+} from '@/services/authService';
 
 // Login mutation
 export const useLogin = () => {
   const router = useRouter();
-  
+
   return useMutation<AuthResponse, Error, LoginData>({
-    mutationFn: async (data) => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
-      }
-      
-      return response.json();
-    },
+    mutationFn: (data) => loginService(data),
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
       if (data.user.role === 'admin') {
@@ -76,22 +38,9 @@ export const useLogin = () => {
 // Signup mutation
 export const useSignup = () => {
   const router = useRouter();
-  
+
   return useMutation<AuthResponse, Error, SignupData>({
-    mutationFn: async (data) => {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Signup failed');
-      }
-      
-      return response.json();
-    },
+    mutationFn: (data) => signupService(data),
     onSuccess: (data) => {
       if (data.user.role === 'admin') {
         router.push('/admin-dashboard');
@@ -114,17 +63,7 @@ export const useCurrentUser = () => {
       if (!token) {
         throw new Error('No token found');
       }
-      
-      const response = await fetch('/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get current user');
-      }
-      
-      const data = await response.json();
-      return data.user;
+      return fetchCurrentUser(token);
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -134,24 +73,10 @@ export const useCurrentUser = () => {
 // Forgot password mutation
 export const useForgotPassword = () => {
   const router = useRouter();
-  
+
   return useMutation<{ message: string }, Error, ForgotPasswordData>({
-    mutationFn: async (data) => {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send reset email');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data, variables) => {
-      // Store email for OTP verification
+    mutationFn: (data) => forgotPasswordService(data),
+    onSuccess: (_data, variables) => {
       sessionStorage.setItem('resetEmail', variables.email);
       router.push(`/verify-otp?email=${encodeURIComponent(variables.email)}`);
     },
@@ -164,22 +89,9 @@ export const useForgotPassword = () => {
 // Reset password mutation
 export const useResetPassword = () => {
   const router = useRouter();
-  
-  return useMutation<{ message: string }, Error, ResetPasswordData & { token: string }>({
-    mutationFn: async ({ token, password }) => {
-      const response = await fetch(`/api/auth/reset-password?token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reset password');
-      }
-      
-      return response.json();
-    },
+
+  return useMutation<{ message: string }, Error, { token: string; password: string }>({
+    mutationFn: async ({ token, password }) => resetPasswordService(token, password),
     onSuccess: () => {
       router.push('/login');
     },
@@ -192,7 +104,7 @@ export const useResetPassword = () => {
 // Logout function
 export const useLogout = () => {
   const router = useRouter();
-  
+
   return () => {
     localStorage.removeItem('token');
     router.push('/login');
@@ -208,17 +120,7 @@ export const useUsers = () => {
       if (!token) {
         throw new Error('No token found');
       }
-      
-      const response = await fetch('/api/auth/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      
-      const data = await response.json();
-      return data.users || [];
+      return fetchAdminUsers(token);
     },
     retry: false,
     staleTime: 0, // No caching to ensure fresh data

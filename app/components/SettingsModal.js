@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { logout as logoutService } from '@/services/authService';
 
 export default function SettingsModal({ isOpen, onClose, user, onUserUpdate }) {
   const router = useRouter();
@@ -107,7 +108,7 @@ export default function SettingsModal({ isOpen, onClose, user, onUserUpdate }) {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await logoutService();
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
