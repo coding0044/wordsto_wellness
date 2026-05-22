@@ -153,6 +153,8 @@ function PricingCard({ plan, userPlan }) {
               </svg>
               <span className="text-gray-700 text-sm">{feature}</span>
             </div>
+
+
           ))}
         </div>
       </div>

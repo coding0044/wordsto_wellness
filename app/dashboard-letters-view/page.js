@@ -49,8 +49,67 @@ function Navbar({ user }) {
   );
 }
 
-// Letter Card Component
-function LetterCard({ letter }) {
+// Locked Letter Card Component for Free Users
+function LockedLetterCard() {
+  const router = useRouter();
+  
+  return (
+    <div className="group block bg-white/60 rounded-2xl p-6 shadow-sm border border-gray-100 opacity-75">
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-2xl shadow-md">
+          🔒
+        </div>
+        <span className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold uppercase tracking-wide">Locked</span>
+      </div>
+      <div className="h-7 bg-gray-200 rounded-lg w-3/4 mb-3 animate-pulse"></div>
+      <div className="space-y-2 mb-4">
+        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-4/6 animate-pulse"></div>
+      </div>
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <span className="text-xs text-gray-400">Premium Content</span>
+        <button 
+          onClick={() => router.push('/pricing')}
+          className="flex items-center space-x-1 text-amber-600 font-semibold text-sm hover:translate-x-1 transition-transform"
+        >
+          <span>Upgrade to unlock</span>
+          <span>🔓</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Free Plan Upgrade Banner
+function FreePlanUpgradeBanner() {
+  const router = useRouter();
+  
+  return (
+    <div className="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-2xl">
+            🚀
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-amber-800">Unlock All Letters</h3>
+            <p className="text-amber-700 text-sm">Upgrade to Premium or Pro to access all letter templates and advanced features</p>
+          </div>
+        </div>
+        <button
+          onClick={() => router.push('/pricing')}
+          className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+        >
+          Upgrade Now →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Letter Card Component (Unlocked for Premium/Pro)
+function LetterCard({ letter, onReadMore }) {
   return (
     <div className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
@@ -72,7 +131,10 @@ function LetterCard({ letter }) {
       )}
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <span className="text-xs text-gray-500">{letter.createdAt ? new Date(letter.createdAt).toLocaleDateString() : ''}</span>
-        <button className="flex items-center space-x-1 text-orange-600 font-semibold text-sm hover:translate-x-1 transition-transform">
+        <button 
+          onClick={() => onReadMore(letter)}
+          className="flex items-center space-x-1 text-orange-600 font-semibold text-sm hover:translate-x-1 transition-transform"
+        >
           <span>Read More</span>
           <span>→</span>
         </button>
@@ -84,6 +146,7 @@ function LetterCard({ letter }) {
 // Main Letters View Content
 function LettersViewContent() {
   const [isClient, setIsClient] = useState(false);
+  const [selectedLetter, setSelectedLetter] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicId = searchParams.get('topic') || searchParams.get('topicId');
@@ -93,7 +156,9 @@ function LettersViewContent() {
   const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
   const { data: lettersByTopic, isLoading: lettersByTopicLoading } = useLettersByTopic(topicId || '');
 
-  
+  const userPlan = userData?.planName?.toLowerCase() || 'free';
+  const isPremiumOrPro = userPlan === 'premium' || userPlan === 'pro';
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -115,11 +180,21 @@ function LettersViewContent() {
   const letters = (currentTopic?.letters && currentTopic.letters.length > 0)
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
+  
   const filteredLetters = letters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     letter.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
   const currentTopicDisplayName = currentTopic?.name || (topicId ? `Topic ${topicId}` : 'Letters');
+
+  const handleReadMore = (letter) => {
+    setSelectedLetter(letter);
+  };
+
+  const closeModal = () => {
+    setSelectedLetter(null);
+  };
 
   if (!isClient || userLoading || (topicId && lettersByTopicLoading)) {
     return (
@@ -167,9 +242,17 @@ function LettersViewContent() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{currentTopicDisplayName}</h1>
               <p className="text-gray-600">{letters.length} letters available</p>
+              {!isPremiumOrPro && (
+                <p className="text-amber-600 text-sm mt-1 flex items-center gap-1">
+                  <span>🔒</span> Upgrade to Premium or Pro to unlock all letters
+                </p>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Free Plan Upgrade Banner */}
+        {!isPremiumOrPro && <FreePlanUpgradeBanner />}
 
         {/* Search Bar */}
         <div className="relative mb-8">
@@ -202,10 +285,54 @@ function LettersViewContent() {
             <p className="text-gray-600">{searchQuery ? 'Try a different search term' : 'Letters will appear here once they\'re added.'}</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredLetters.map((letter) => (
-              <LetterCard key={letter._id} letter={letter} />
-            ))}
+          <>
+            {/* Show actual letters for Premium/Pro users, show locked placeholders for Free users */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {isPremiumOrPro ? (
+                // Premium/Pro users see actual letters
+                filteredLetters.map((letter) => (
+                  <LetterCard key={letter._id} letter={letter} onReadMore={handleReadMore} />
+                ))
+              ) : (
+                // Free users see locked placeholders
+                filteredLetters.map((_, index) => (
+                  <LockedLetterCard key={`locked-${index}`} />
+                ))
+              )}
+            </div>
+            
+            {/* Show upgrade message for Free users */}
+            {!isPremiumOrPro && filteredLetters.length > 0 && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => router.push('/pricing')}
+                  className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Upgrade to Premium or Pro to unlock all {filteredLetters.length} letters →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Letter Detail Modal - Only shown for Premium/Pro users */}
+        {selectedLetter && isPremiumOrPro && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">{selectedLetter.title}</h2>
+                <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedLetter.content}</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -217,6 +344,7 @@ function LettersViewContent() {
   );
 }
 
+// Main Export
 export default function LettersViewPage() {
   return (
     <Suspense fallback={
