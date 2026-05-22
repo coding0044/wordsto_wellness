@@ -1044,7 +1044,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                     action={<AddBtn label="Letter" onClick={()=>openForm('letter')} ac={ACCENT.letters} />}
                   />
                   <Table
-                    cols={['Letter','Topic','Content Preview','Created','Actions']}
+                    cols={['Letter','Topic','Type','Content Preview','Created','Actions']}
                     icon={FileText} empty="No letters yet" loading={contentTreeLoading} tabName="letters"
                     rows={lettersData_paginated.items.map(letter=>(
                       <tr key={letter._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
@@ -1055,6 +1055,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                           </div>
                         </td>
                         <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(String(letter.topic)) || '—' : letter.topic?.name || '—'}</span></td>
+                        <td style={tdStyle}><span style={{ color:'#334155', fontWeight:600 }}>{letter.letter_type || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(letter.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                         <td style={tdStyle}>
