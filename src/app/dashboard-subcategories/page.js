@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { useContentTree } from '@/hooks/useContent';
 import Link from 'next/link';
+import PlanStatusBadge from '../../components/PlanStatusBadge';
 
 // Navigation Component
 function Navbar({ user }) {
@@ -24,7 +25,7 @@ function Navbar({ user }) {
         <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
-        <span className="text-xl font-semibold text-gray-800">Soften</span>
+        <span className="text-xl font-semibold text-gray-800">Wordstowellness</span>
       </Link>
 
       <div className="hidden md:flex items-center gap-1">
@@ -36,7 +37,7 @@ function Navbar({ user }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="px-3 py-1.5 bg-sky-50 text-sky-600 rounded-full text-sm font-medium">Free plan</span>
+        <PlanStatusBadge user={user} />
         <button onClick={handleLogout} className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -202,7 +203,7 @@ function SubcategoriesContent() {
         )}
 
         <footer className="mt-16 text-center">
-          <p className="text-sm text-gray-500">Soften - write with care.</p>
+          <p className="text-sm text-gray-500">Wordstowellness - write with care.</p>
         </footer>
       </main>
     </div>

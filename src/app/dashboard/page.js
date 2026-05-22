@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
 import Link from 'next/link';
 import SettingsModal from '@/components/SettingsModal';
+import PlanStatusBadge from '@/components/PlanStatusBadge';
 
 // Navigation Component
 function Navbar({ user, onSettingsClick }) {
@@ -25,7 +26,7 @@ function Navbar({ user, onSettingsClick }) {
         <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
-        <span className="text-xl font-semibold text-gray-800">Wordstowellness</span>
+        <span className="text-xl font-light text-gray-700">Wordstowellness</span>
       </Link>
 
       {/* Navigation Links */}
@@ -49,9 +50,7 @@ function Navbar({ user, onSettingsClick }) {
 
       {/* User Actions */}
       <div className="flex items-center gap-3">
-        <span className="px-3 py-1.5 bg-sky-50 text-sky-600 rounded-full text-sm font-medium">
-          Free plan
-        </span>
+        <PlanStatusBadge user={user} />
         <button
           onClick={onSettingsClick}
           className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg text-sm font-medium transition-all cursor-pointer"
@@ -144,6 +143,58 @@ function ToolCard({ title, description, icon, badge, href }) {
   );
 }
 
+function getUserPlanInfo(user) {
+  const planName =
+    user?.planName ||
+    user?.plan?.name ||
+    user?.subscription?.plan ||
+    'Free';
+
+  const planStatus =
+    user?.planStatus ||
+    user?.plan?.status ||
+    user?.subscription?.status ||
+    'Active';
+
+  const usesLeft =
+    user?.usesLeft ||
+    user?.plan?.usesLeft ||
+    user?.subscription?.usesLeft ||
+    (planName.toLowerCase() === 'free' ? '1/3' : 'Unlimited');
+
+  const resetFrequency =
+    user?.resetFrequency ||
+    user?.plan?.resetFrequency ||
+    user?.subscription?.resetFrequency ||
+    'Weekly';
+
+  return { planName, planStatus, usesLeft, resetFrequency };
+}
+
+function getPlanBadgeLabel(user) {
+  const planName =
+    user?.planName ||
+    user?.plan?.name ||
+    user?.subscription?.plan ||
+    'Free';
+
+  return planName.toLowerCase() === 'free' ? 'Free plan' : `${planName} plan`;
+}
+
+function getBannerTitle({ planName, planStatus, usesLeft }) {
+  const planLabel =
+    planName.toLowerCase() === 'free'
+      ? 'Free Plan'
+      : `${planName} Plan${planStatus ? ` · ${planStatus}` : ''}`;
+
+  const usesLabel =
+    usesLeft.toLowerCase().includes('unlimited')
+      ? 'Unlimited uses'
+      : `${usesLeft} left`;
+
+  return `You're on ${planLabel} — ${usesLabel}`;
+}
+
 // Main Dashboard Content
 function DashboardContent() {
   const [isClient, setIsClient] = useState(false);
@@ -172,6 +223,14 @@ function DashboardContent() {
     setUser(prev => ({ ...prev, ...updatedData }));
   };
 
+  const planInfo = getUserPlanInfo(user || userData);
+  const bannerTitle = getBannerTitle(planInfo);
+  const isFreePlan = planInfo.planName.toLowerCase() === 'free';
+  const bannerDescription = isFreePlan
+    ? 'Upgrade to Premium for unlimited letters, refinements, and feeling-based search.'
+    : 'Enjoy unlimited access to all letter tools and refinement features.';
+  const ctaLabel = isFreePlan ? 'Upgrade' : 'Manage subscription';
+
   if (!isClient || userLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
@@ -189,7 +248,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
-      <Navbar user={user} onSettingsClick={() => setShowSettings(true)} />
+      <Navbar user={user || userData} onSettingsClick={() => setShowSettings(true)} />
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
@@ -219,9 +278,9 @@ function DashboardContent() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          <StatCard label="Plan" value="Free" icon="plan" />
-          <StatCard label="Uses Left" value="1/3" icon="uses" />
-          <StatCard label="Resets" value="Weekly" icon="resets" />
+          <StatCard label="Plan" value={planInfo.planName} icon="plan" />
+          <StatCard label="Uses Left" value={planInfo.usesLeft} icon="uses" />
+          <StatCard label="Resets" value={planInfo.resetFrequency} icon="resets" />
         </div>
 
         {/* Tools Section */}
@@ -266,9 +325,9 @@ function DashboardContent() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">You're on Free Plan - 1 use left</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">{bannerTitle}</h3>
                 <p className="text-sm text-gray-600 max-w-md">
-                  Upgrade to Premium for unlimited letters, refinements, and feeling-based search.
+                  {bannerDescription}
                 </p>
                 <div className="mt-3 w-32 h-1.5 bg-white rounded-full overflow-hidden">
                   <div className="w-1/3 h-full bg-sky-500 rounded-full"></div>
@@ -279,7 +338,7 @@ function DashboardContent() {
               href="/pricing"
               className="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-medium text-sm flex items-center gap-2 transition-colors"
             >
-              Upgrade
+              {ctaLabel}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3"/>
               </svg>

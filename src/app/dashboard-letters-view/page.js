@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { useContentTree, useLettersByTopic } from '@/hooks/useContent';
 import Link from 'next/link';
+import PlanStatusBadge from '../../components/PlanStatusBadge';
 
 // Navigation Component
 function Navbar({ user }) {
@@ -36,7 +37,7 @@ function Navbar({ user }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="px-3 py-1.5 bg-sky-50 text-sky-600 rounded-full text-sm font-medium">Free plan</span>
+        <PlanStatusBadge user={user} />
         <button onClick={handleLogout} className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>

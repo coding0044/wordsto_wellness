@@ -16,6 +16,13 @@ export interface ForgotPasswordData {
   email: string;
 }
 
+export interface SubscriptionData {
+  plan?: string;
+  status?: string;
+  usesLeft?: string;
+  resetFrequency?: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: {
@@ -23,6 +30,12 @@ export interface AuthResponse {
     name: string;
     email: string;
     role: string;
+    planName?: string;
+    planStatus?: string;
+    usesLeft?: string;
+    resetFrequency?: string;
+    plan?: SubscriptionData;
+    subscription?: SubscriptionData;
   };
 }
 
@@ -31,6 +44,12 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  planName?: string;
+  planStatus?: string;
+  usesLeft?: string;
+  resetFrequency?: string;
+  plan?: SubscriptionData;
+  subscription?: SubscriptionData;
 }
 
 export async function login(data: LoginData): Promise<AuthResponse> {

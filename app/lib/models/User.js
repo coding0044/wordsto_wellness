@@ -40,6 +40,30 @@ const UserSchema = new mongoose.Schema({
   resetPasswordExpire: Date,
   otp: String,
   otpExpire: Date,
+  // Subscription/Plan fields
+  planName: {
+    type: String,
+    default: 'Free',
+  },
+  planStatus: {
+    type: String,
+    enum: ['active', 'inactive', 'expired', 'trial'],
+    default: 'active',
+  },
+  usesLeft: {
+    type: Number,
+    default: null,
+  },
+  resetFrequency: {
+    type: String,
+    default: null,
+  },
+  subscription: {
+    plan: String,
+    status: String,
+    usesLeft: Number,
+    resetFrequency: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
