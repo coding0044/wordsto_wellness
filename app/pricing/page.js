@@ -76,7 +76,7 @@ const plans = [
       'Save custom templates',
       'Export to PDF',
     ],
-    cta: 'This is work to open',
+    cta: 'Upgrade to Premium',
     ctaStyle: 'bg-amber-500 hover:bg-amber-600 text-white',
     color: 'amber',
     popular: true,
@@ -94,14 +94,21 @@ const plans = [
       'Dedicated account manager',
       'Custom integrations',
     ],
-    cta: 'This is work to open',
+    cta: 'Upgrade to Pro',
     ctaStyle: 'bg-purple-500 hover:bg-purple-600 text-white',
     color: 'purple',
   },
 ];
 
 function PricingCard({ plan, userPlan }) {
+  const router = useRouter();
   const isCurrentPlan = userPlan?.toLowerCase() === plan.name.toLowerCase();
+
+  const handleSelectPlan = () => {
+    if (!isCurrentPlan) {
+      router.push(`/payment?plan=${plan.name.toLowerCase()}`);
+    }
+  };
   
   return (
     <div className={`relative rounded-3xl border-2 overflow-hidden transition-all duration-300 ${
@@ -130,6 +137,7 @@ function PricingCard({ plan, userPlan }) {
         </div>
 
         <button
+          onClick={handleSelectPlan}
           disabled={isCurrentPlan}
           className={`w-full py-3 rounded-full font-semibold mb-8 transition-colors duration-200 ${
             isCurrentPlan
@@ -137,7 +145,7 @@ function PricingCard({ plan, userPlan }) {
               : plan.ctaStyle
           }`}
         >
-          {isCurrentPlan ? (plan.name === 'Free' ? 'This is free plan' : 'This is come') : plan.cta}
+          {isCurrentPlan ? 'Current plan' : plan.cta}
         </button>
 
         <div className="space-y-4">
@@ -232,7 +240,7 @@ export default function PricingPage() {
             
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600">Yes, start with our free plan to explore all features. This is come to subscription when you&apos;re ready.</p>
+              <p className="text-gray-600">Yes, start with our free plan to explore all features. Upgrade to a paid plan whenever you are ready.</p>
             </div>
             
             <div>
