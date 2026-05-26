@@ -59,8 +59,8 @@ const plans = [
       'Limited improvements per month',
       'Community support',
     ],
-    cta: 'Current Plan',
-    ctaStyle: 'opacity-50 cursor-not-allowed',
+    cta: 'Choose Free',
+    ctaStyle: 'bg-sky-500 hover:bg-sky-600 text-white',
     color: 'sky',
   },
   {
@@ -76,16 +76,16 @@ const plans = [
       'Save custom templates',
       'Export to PDF',
     ],
-    cta: 'This is work to open',
+    cta: 'Upgrade to Premium',
     ctaStyle: 'bg-amber-500 hover:bg-amber-600 text-white',
     color: 'amber',
     popular: true,
   },
   {
-    name: 'Pro',
+    name: 'Expert',
     price: '$24.99',
     period: '/month',
-    description: 'For professionals',
+    description: 'For professionals and expert writers',
     features: [
       'Everything in Premium',
       'Unlimited API access',
@@ -94,14 +94,26 @@ const plans = [
       'Dedicated account manager',
       'Custom integrations',
     ],
-    cta: 'This is work to open',
+    cta: 'Upgrade to Expert',
     ctaStyle: 'bg-purple-500 hover:bg-purple-600 text-white',
     color: 'purple',
   },
 ];
 
 function PricingCard({ plan, userPlan }) {
+  const router = useRouter();
   const isCurrentPlan = userPlan?.toLowerCase() === plan.name.toLowerCase();
+  const buttonLabel = isCurrentPlan
+    ? 'Current plan'
+    : plan.name === 'Free'
+    ? 'Switch to Free'
+    : plan.cta;
+
+  const handleSelectPlan = () => {
+    if (!isCurrentPlan) {
+      router.push(`/payment?plan=${plan.name.toLowerCase()}`);
+    }
+  };
   
   return (
     <div className={`relative rounded-3xl border-2 overflow-hidden transition-all duration-300 ${
@@ -130,14 +142,15 @@ function PricingCard({ plan, userPlan }) {
         </div>
 
         <button
+          onClick={handleSelectPlan}
           disabled={isCurrentPlan}
           className={`w-full py-3 rounded-full font-semibold mb-8 transition-colors duration-200 ${
             isCurrentPlan
-              ? `bg-gray-100 text-gray-600 ${plan.ctaStyle}`
+              ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
               : plan.ctaStyle
           }`}
         >
-          {isCurrentPlan ? (plan.name === 'Free' ? 'This is free plan' : 'This is come') : plan.cta}
+          {buttonLabel}
         </button>
 
         <div className="space-y-4">

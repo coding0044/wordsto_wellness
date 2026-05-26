@@ -75,7 +75,7 @@ export default function Login() {
             setError(data.message || 'Google login failed');
           }
         } catch (error) {
-          setError('Something went wrong with Google login');
+          setError(error instanceof Error ? error.message : 'Something went wrong with Google login');
         } finally {
           setGoogleLoading(false);
         }
@@ -123,10 +123,10 @@ export default function Login() {
           router.push('/dashboard');
         }
       } else {
-        setError(data.message);
+        setError(data.message || 'Invalid login credentials');
       }
     } catch (error) {
-      setError('Something went wrong');
+      setError(error instanceof Error ? error.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }

@@ -66,7 +66,8 @@ export const useCurrentUser = () => {
       return fetchCurrentUser(token);
     },
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 };
 

@@ -7,15 +7,22 @@ const paymentPlans = {
     name: 'Premium',
     price: '$9.99 / month',
   },
-  pro: {
-    name: 'Pro',
+  expert: {
+    name: 'Expert',
     price: '$24.99 / month',
   },
 };
 
+function normalizePlanKey(planKey) {
+  if (!planKey) return '';
+  const normalized = planKey.toLowerCase();
+  if (normalized === 'pro') return 'expert';
+  return normalized;
+}
+
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-  const planKey = searchParams.get('plan')?.toLowerCase() || '';
+  const planKey = normalizePlanKey(searchParams.get('plan'));
   const plan = paymentPlans[planKey];
 
   return (
@@ -24,9 +31,9 @@ export default function PaymentSuccessPage() {
         {plan ? (
           <>
             <div className="text-center">
-              <p className="text-sm uppercase tracking-[0.2em] text-sky-600 font-semibold">Payment confirmed</p>
-              <h1 className="mt-4 text-4xl font-bold text-gray-900">Ready to pay for {plan.name}</h1>
-              <p className="mt-4 text-gray-600">Your selected plan is {plan.name} at {plan.price}. This page confirms the payment flow reached the confirmation step.</p>
+              <p className="text-sm uppercase tracking-[0.2em] text-sky-600 font-semibold">Subscription active</p>
+              <h1 className="mt-4 text-4xl font-bold text-gray-900">Your {plan.name} plan is now active</h1>
+              <p className="mt-4 text-gray-600">Thank you for upgrading. Your selected plan is {plan.name} at {plan.price}, and your account has been updated immediately.</p>
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -41,7 +48,7 @@ export default function PaymentSuccessPage() {
         ) : (
           <div className="text-center">
             <p className="text-lg font-semibold text-gray-900">No plan selected</p>
-            <p className="mt-3 text-gray-600">Please return to Pricing and choose Premium or Pro before continuing to payment.</p>
+            <p className="mt-3 text-gray-600">Please return to Pricing and choose Premium or Expert before continuing to payment.</p>
             <Link href="/pricing" className="mt-6 inline-flex rounded-full bg-sky-600 px-5 py-3 text-white font-medium hover:bg-sky-700 transition">
               Choose a plan
             </Link>

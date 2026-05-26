@@ -188,7 +188,7 @@ function getBannerTitle({ planName, planStatus, usesLeft }) {
       : `${planName} Plan${planStatus ? ` · ${planStatus}` : ''}`;
 
   const usesLabel =
-    usesLeft.toLowerCase().includes('unlimited')
+    String(usesLeft).toLowerCase().includes('unlimited')
       ? 'Unlimited uses'
       : `${usesLeft} left`;
 
@@ -227,7 +227,7 @@ function DashboardContent() {
   const bannerTitle = getBannerTitle(planInfo);
   const isFreePlan = planInfo.planName.toLowerCase() === 'free';
   const bannerDescription = isFreePlan
-    ? 'Upgrade to Premium for unlimited letters, refinements, and feeling-based search.'
+    ? 'Upgrade to Premium or Expert for unlimited letters, refinements, and feeling-based search.'
     : 'Enjoy unlimited access to all letter tools and refinement features.';
   const ctaLabel = isFreePlan ? 'Upgrade' : 'Manage subscription';
 

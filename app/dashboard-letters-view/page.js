@@ -157,7 +157,7 @@ function LettersViewContent() {
   const { data: lettersByTopic, isLoading: lettersByTopicLoading } = useLettersByTopic(topicId || '');
 
   const userPlan = userData?.planName?.toLowerCase() || 'free';
-  const isPremiumOrPro = userPlan === 'premium' || userPlan === 'pro';
+  const isPremiumOrExpert = userPlan === 'premium' || userPlan === 'expert' || userPlan === 'pro';
 
   useEffect(() => {
     setIsClient(true);
@@ -242,9 +242,9 @@ function LettersViewContent() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{currentTopicDisplayName}</h1>
               <p className="text-gray-600">{letters.length} letters available</p>
-              {!isPremiumOrPro && (
+              {!isPremiumOrExpert && (
                 <p className="text-amber-600 text-sm mt-1 flex items-center gap-1">
-                  <span>🔒</span> Upgrade to Premium or Pro to unlock all letters
+                  <span>🔒</span> Upgrade to Premium or Expert to unlock all letters
                 </p>
               )}
             </div>
@@ -252,7 +252,7 @@ function LettersViewContent() {
         </div>
 
         {/* Free Plan Upgrade Banner */}
-        {!isPremiumOrPro && <FreePlanUpgradeBanner />}
+        {!isPremiumOrExpert && <FreePlanUpgradeBanner />}
 
         {/* Search Bar */}
         <div className="relative mb-8">
@@ -286,10 +286,10 @@ function LettersViewContent() {
           </div>
         ) : (
           <>
-            {/* Show actual letters for Premium/Pro users, show locked placeholders for Free users */}
+            {/* Show actual letters for Premium/Expert users, show locked placeholders for Free users */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {isPremiumOrPro ? (
-                // Premium/Pro users see actual letters
+              {isPremiumOrExpert ? (
+                // Premium/Expert users see actual letters
                 filteredLetters.map((letter) => (
                   <LetterCard key={letter._id} letter={letter} onReadMore={handleReadMore} />
                 ))
@@ -302,21 +302,21 @@ function LettersViewContent() {
             </div>
             
             {/* Show upgrade message for Free users */}
-            {!isPremiumOrPro && filteredLetters.length > 0 && (
+            {!isPremiumOrExpert && filteredLetters.length > 0 && (
               <div className="text-center mt-8">
                 <button
                   onClick={() => router.push('/pricing')}
                   className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
                 >
-                  Upgrade to Premium or Pro to unlock all {filteredLetters.length} letters →
+                  Upgrade to Premium or Expert to unlock all {filteredLetters.length} letters →
                 </button>
               </div>
             )}
           </>
         )}
 
-        {/* Letter Detail Modal - Only shown for Premium/Pro users */}
-        {selectedLetter && isPremiumOrPro && (
+        {/* Letter Detail Modal - Only shown for Premium/Expert users */}
+        {selectedLetter && isPremiumOrExpert && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
             <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">

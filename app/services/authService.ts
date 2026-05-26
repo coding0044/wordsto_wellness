@@ -19,7 +19,7 @@ export interface ForgotPasswordData {
 export interface SubscriptionData {
   plan?: string;
   status?: string;
-  usesLeft?: string;
+  usesLeft?: number | null;
   resetFrequency?: string;
 }
 
@@ -32,7 +32,7 @@ export interface AuthResponse {
     role: string;
     planName?: string;
     planStatus?: string;
-    usesLeft?: string;
+    usesLeft?: number | null;
     resetFrequency?: string;
     plan?: SubscriptionData;
     subscription?: SubscriptionData;
@@ -72,6 +72,14 @@ export async function getCurrentUser(token: string): Promise<User> {
   return fetchJson<{ user: User }>('/api/auth/me', {
     headers: authHeaders(token),
   }).then((response) => response.user);
+}
+
+export async function subscribe(data: SubscriptionData): Promise<{ user: User }> {
+  return fetchJson<{ user: User }>('/api/auth/subscribe', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(data),
+  });
 }
 
 export async function forgotPassword(data: ForgotPasswordData): Promise<{ message: string }> {

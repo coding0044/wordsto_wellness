@@ -55,6 +55,11 @@ export async function POST(req) {
           name: user.name,
           email: user.email,
           role: user.role,
+          planName: user.planName || 'Free',
+          planStatus: user.planStatus || 'active',
+          usesLeft: user.usesLeft,
+          resetFrequency: user.resetFrequency,
+          subscription: user.subscription || null,
         },
       },
       { status: 201 }

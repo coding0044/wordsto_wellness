@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-export default function GlobalError({ error, reset }) {
+export default function GlobalError({ error, reset }: { error: Error | null; reset?: () => void }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">

@@ -59,8 +59,8 @@ const plans = [
       'Limited improvements per month',
       'Community support',
     ],
-    cta: 'Current Plan',
-    ctaStyle: 'opacity-50 cursor-not-allowed',
+    cta: 'Choose Free',
+    ctaStyle: 'bg-sky-500 hover:bg-sky-600 text-white',
     color: 'sky',
   },
   {
@@ -82,19 +82,19 @@ const plans = [
     popular: true,
   },
   {
-    name: 'Pro',
+    name: 'Expert',
     price: '$24.99',
     period: '/month',
-    description: 'For professionals',
+    description: 'For professionals and expert writers',
     features: [
       'Everything in Premium',
-      'Unlimited API access',
+      'Unlimited expert letters & refinements',
       'Team collaboration',
       'Advanced analytics',
-      'Dedicated account manager',
-      'Custom integrations',
+      'Priority account support',
+      'Custom workspace access',
     ],
-    cta: 'Upgrade to Pro',
+    cta: 'Upgrade to Expert',
     ctaStyle: 'bg-purple-500 hover:bg-purple-600 text-white',
     color: 'purple',
   },
@@ -103,6 +103,11 @@ const plans = [
 function PricingCard({ plan, userPlan }) {
   const router = useRouter();
   const isCurrentPlan = userPlan?.toLowerCase() === plan.name.toLowerCase();
+  const buttonLabel = isCurrentPlan
+    ? 'Current plan'
+    : plan.name === 'Free'
+    ? 'Switch to Free'
+    : plan.cta;
 
   const handleSelectPlan = () => {
     if (!isCurrentPlan) {
@@ -141,11 +146,11 @@ function PricingCard({ plan, userPlan }) {
           disabled={isCurrentPlan}
           className={`w-full py-3 rounded-full font-semibold mb-8 transition-colors duration-200 ${
             isCurrentPlan
-              ? `bg-gray-100 text-gray-600 ${plan.ctaStyle}`
+              ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
               : plan.ctaStyle
           }`}
         >
-          {isCurrentPlan ? 'Current plan' : plan.cta}
+          {buttonLabel}
         </button>
 
         <div className="space-y-4">

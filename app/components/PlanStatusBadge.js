@@ -41,7 +41,7 @@ export default function PlanStatusBadge({ user }) {
     textColor = 'text-amber-700';
     badgeBg = 'bg-gradient-to-r from-amber-100 to-orange-100';
     borderColor = 'border-amber-200';
-  } else if (planName.toLowerCase().includes('pro')) {
+  } else if (planName.toLowerCase().includes('expert') || planName.toLowerCase().includes('pro')) {
     bgColor = 'bg-gradient-to-br from-purple-50 to-pink-50';
     textColor = 'text-purple-700';
     badgeBg = 'bg-gradient-to-r from-purple-100 to-pink-100';

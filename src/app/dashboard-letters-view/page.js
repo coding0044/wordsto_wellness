@@ -49,7 +49,38 @@ function Navbar({ user }) {
   );
 }
 
-// Letter Card Component
+// Locked Letter Card Component for Free Users
+function LockedLetterCard() {
+  const router = useRouter();
+
+  return (
+    <div className="group block bg-white/70 rounded-2xl p-6 shadow-sm border border-gray-100 opacity-80">
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-2xl shadow-md">
+          🔒
+        </div>
+        <span className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold uppercase tracking-wide">Locked</span>
+      </div>
+      <div className="h-7 bg-gray-200 rounded-lg w-3/4 mb-3 animate-pulse"></div>
+      <div className="space-y-2 mb-4">
+        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-4/6 animate-pulse"></div>
+      </div>
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <span className="text-xs text-gray-400">Premium content</span>
+        <button
+          onClick={() => router.push('/pricing')}
+          className="flex items-center space-x-1 text-amber-600 font-semibold text-sm hover:translate-x-1 transition-transform"
+        >
+          <span>Upgrade to unlock</span>
+          <span>🔓</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LetterCard({ letter }) {
   return (
     <div className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 transition-all duration-200">
@@ -120,6 +151,8 @@ function LettersViewContent() {
     letter.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const currentTopicDisplayName = currentTopic?.name || (topicId ? `Topic ${topicId}` : 'Letters');
+  const userPlan = userData?.planName?.toLowerCase() || 'free';
+  const hasPaidAccess = userPlan === 'premium' || userPlan === 'expert' || userPlan === 'pro';
 
   if (!isClient || userLoading || (topicId && lettersByTopicLoading)) {
     return (
@@ -167,6 +200,11 @@ function LettersViewContent() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{currentTopicDisplayName}</h1>
               <p className="text-gray-600">{letters.length} letters available</p>
+              {!hasPaidAccess && (
+                <p className="text-amber-600 text-sm mt-1 flex items-center gap-1">
+                  <span>🔒</span> Upgrade to Premium or Expert to unlock all letters
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -201,12 +239,28 @@ function LettersViewContent() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">{searchQuery ? 'No letters found' : 'No letters available'}</h3>
             <p className="text-gray-600">{searchQuery ? 'Try a different search term' : 'Letters will appear here once they\'re added.'}</p>
           </div>
-        ) : (
+        ) : hasPaidAccess ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredLetters.map((letter) => (
               <LetterCard key={letter._id} letter={letter} />
             ))}
           </div>
+        ) : (
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: Math.max(filteredLetters.length, 3) }).map((_, index) => (
+                <LockedLetterCard key={`locked-${index}`} />
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <button
+                onClick={() => router.push('/pricing')}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Upgrade to Premium or Expert to unlock all letters →
+              </button>
+            </div>
+          </>
         )}
 
         <footer className="mt-16 text-center">
