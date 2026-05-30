@@ -17,30 +17,15 @@ import {
   updateAdminUser,
 } from '@/services/auth-service.ts';
 import {
-  LayoutDashboard, FileText, Users, FolderTree, LogOut,
-  Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,
-  Layers, BookOpen, ChevronRight, TrendingUp, Bell,
-  ChevronLeft, ChevronsLeft, ChevronsRight, Eye, EyeOff
+  LogOut, Plus, Search, Shield, Edit2, Trash2, X,
+  ChevronRight, TrendingUp, Bell,
+  ChevronLeft, ChevronsLeft, ChevronsRight, Eye, EyeOff,
+  FileText, Users, Layers, BookOpen
 } from 'lucide-react';
+import { ADMIN_PAGES, ADMIN_ACCENT_COLORS, getAccentColor } from '@/lib/admin-dashboard-config.ts';
 
-
-
-const NAV_ITEMS = [
-  { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
-  { id: 'categories',    label: 'Categories',     icon: Layers },
-  { id: 'subcategories', label: 'Subcategories',  icon: FolderTree },
-  { id: 'topics',        label: 'Topics',         icon: BookOpen },
-  { id: 'letters',       label: 'Letters',        icon: FileText },
-  { id: 'users',         label: 'Users',          icon: Users },
-];
-
-const ACCENT = {
-  categories:    { from: '#6366f1', to: '#8b5cf6', light: '#eef2ff', text: '#4338ca', ring: '#c7d2fe' },
-  subcategories: { from: '#10b981', to: '#059669', light: '#ecfdf5', text: '#047857', ring: '#a7f3d0' },
-  topics:        { from: '#0ea5e9', to: '#2563eb', light: '#f0f9ff', text: '#0369a1', ring: '#bae6fd' },
-  letters:       { from: '#f59e0b', to: '#ef4444', light: '#fffbeb', text: '#b45309', ring: '#fde68a' },
-  users:         { from: '#ec4899', to: '#a855f7', light: '#fdf4ff', text: '#9333ea', ring: '#e9d5ff' },
-};
+const NAV_ITEMS = ADMIN_PAGES;
+const ACCENT = ADMIN_ACCENT_COLORS;
 
 // Pagination Component
 function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
