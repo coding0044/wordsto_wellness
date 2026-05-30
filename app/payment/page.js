@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/useAuth';
-import { subscribe } from '@/services/authService';
-import PlanStatusBadge from '@/components/PlanStatusBadge';
+import { useCurrentUser } from '@/hooks/use-auth.ts';
+import { subscribe } from '@/services/auth-service.ts';
+import PlanStatusBadge from '@/components/plan-status-badge.js';
 
 const paymentPlans = {
   premium: {

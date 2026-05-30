@@ -4,7 +4,7 @@ import Category from '../../../lib/models/Category';
 import Subcategory from '../../../lib/models/Subcategory';
 import Topic from '../../../lib/models/Topic';
 import Letter from '../../../lib/models/Letter';
-import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/apiUtils';
+import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/api-utils.js';
 
 function normalizeCategory(category) {
   return {

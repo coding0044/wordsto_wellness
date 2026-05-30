@@ -29,7 +29,7 @@ import {
   createLetter,
   updateLetter,
   deleteLetter,
-} from '@/services/contentService';
+} from '@/services/content-service.ts';
 
 // Get categories
 export const useCategories = () => {

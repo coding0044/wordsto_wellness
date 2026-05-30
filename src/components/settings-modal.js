@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logout as logoutService } from '@/services/authService';
+import { logout as logoutService } from '@/services/auth-service.ts';
 
 export default function SettingsModal({ isOpen, onClose, user, onUserUpdate }) {
   const router = useRouter();

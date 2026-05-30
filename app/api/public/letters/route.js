@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/db';
 import Letter from '../../../lib/models/Letter';
 import Topic from '../../../lib/models/Topic';
-import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/apiUtils';
+import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/api-utils.js';
 
 function normalizeLetter(letter) {
   const topicValue = letter.topic ?? letter['topic'] ?? letter['topic_id'] ?? letter['`topic_id`'];

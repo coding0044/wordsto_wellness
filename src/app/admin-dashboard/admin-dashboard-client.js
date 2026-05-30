@@ -2,20 +2,20 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCurrentUser, useUsers } from '@/hooks/useAuth';
-import { useContentTree } from '@/hooks/useContent';
+import { useCurrentUser, useUsers } from '@/hooks/use-auth.ts';
+import { useContentTree } from '@/hooks/use-content.ts';
 import {
   useCreateCategory, useUpdateCategory, useDeleteCategory,
   useCreateSubcategory, useUpdateSubcategory, useDeleteSubcategory,
   useCreateTopic, useUpdateTopic, useDeleteTopic,
   useCreateLetter, useUpdateLetter, useDeleteLetter
-} from '@/hooks/useContent';
+} from '@/hooks/use-content.ts';
 import {
   logout as logoutService,
   deleteAdminUser,
   createAdminUser,
   updateAdminUser,
-} from '@/services/authService';
+} from '@/services/auth-service.ts';
 import {
   LayoutDashboard, FileText, Users, FolderTree, LogOut,
   Plus, Search, Shield, Activity, BarChart3, Edit2, Trash2, X,

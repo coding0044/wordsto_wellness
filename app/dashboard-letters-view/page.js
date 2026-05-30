@@ -1,10 +1,10 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/useAuth';
-import { useContentTree, useLettersByTopic } from '@/hooks/useContent';
+import { useCurrentUser } from '@/hooks/use-auth.ts';
+import { useContentTree, useLettersByTopic } from '@/hooks/use-content.ts';
 import Link from 'next/link';
-import PlanStatusBadge from '@/components/PlanStatusBadge';
+import PlanStatusBadge from '@/components/plan-status-badge.js';
 
 // Navigation Component
 function Navbar({ user }) {

@@ -1,4 +1,4 @@
-import AdminDashboard from '../AdminDashboardClient';
+import AdminDashboard from '../admin-dashboard-client';
 
 export default function AdminDashboardTopicsPage() {
   return <AdminDashboard defaultTab="topics" />;

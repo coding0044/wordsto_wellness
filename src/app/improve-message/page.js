@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/useAuth';
+import { useCurrentUser } from '@/hooks/use-auth.ts';
 import Link from 'next/link';
 import PlanStatusBadge from '../../components/PlanStatusBadge';
 

@@ -13,7 +13,7 @@ import {
   LoginData,
   SignupData,
   ForgotPasswordData,
-} from '@/services/authService';
+} from '@/services/auth-service.ts';
 
 // Login mutation
 export const useLogin = () => {
@@ -66,8 +66,7 @@ export const useCurrentUser = () => {
       return fetchCurrentUser(token);
     },
     retry: false,
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 

@@ -1,10 +1,10 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/useAuth';
+import { useCurrentUser } from '@/hooks/use-auth.ts';
 import Link from 'next/link';
-import SettingsModal from '@/components/SettingsModal';
-import PlanStatusBadge from '@/components/PlanStatusBadge';
+import SettingsModal from '@/components/settings-modal.js';
+import PlanStatusBadge from '@/components/plan-status-badge.js';
 
 // Navigation Component
 function Navbar({ user, onSettingsClick }) {
