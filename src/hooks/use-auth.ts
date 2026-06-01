@@ -13,7 +13,7 @@ import {
   LoginData,
   SignupData,
   ForgotPasswordData,
-} from '@/services/auth-service.ts';
+} from '@/services/auth-service';
 
 // Login mutation
 export const useLogin = () => {

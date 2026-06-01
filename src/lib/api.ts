@@ -12,7 +12,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
     }
     return JSON.parse(text) as T;
   }
-
+   
   let message = response.statusText || 'Request failed';
   let details: unknown = text;
 

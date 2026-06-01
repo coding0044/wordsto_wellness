@@ -1,4 +1,5 @@
 import { fetchJson, jsonHeaders, authHeaders } from '@/lib/api';
+import { ApiRoutes } from '@/lib/urls';
 
 export interface Category {
   _id: string;
@@ -83,47 +84,47 @@ function normalizeList<T>(data: unknown): T[] {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const response = await fetchJson('/api/public/categories');
+  const response = await fetchJson(ApiRoutes.public.categories);
   return normalizeList<Category>(response);
 }
 
 export async function getSubcategories(): Promise<Subcategory[]> {
-  const response = await fetchJson('/api/public/subcategories');
+  const response = await fetchJson(ApiRoutes.public.subcategories);
   return normalizeList<Subcategory>(response);
 }
 
 export async function getTopics(): Promise<Topic[]> {
-  const response = await fetchJson('/api/public/topics');
+  const response = await fetchJson(ApiRoutes.public.topics);
   return normalizeList<Topic>(response);
 }
 
 export async function getLetters(): Promise<Letter[]> {
-  const response = await fetchJson('/api/public/letters');
+  const response = await fetchJson(ApiRoutes.public.letters);
   return normalizeList<Letter>(response);
 }
 
 export async function getContentTree(): Promise<Category[]> {
-  const response = await fetchJson('/api/public/content-tree');
+  const response = await fetchJson(ApiRoutes.public.contentTree);
   return normalizeList<Category>(response);
 }
 
 export async function getSubcategoriesByCategory(categoryId: string): Promise<Subcategory[]> {
-  const response = await fetchJson(`/api/public/subcategories?categoryId=${encodeURIComponent(categoryId)}`);
+  const response = await fetchJson(`${ApiRoutes.public.subcategories}?categoryId=${encodeURIComponent(categoryId)}`);
   return normalizeList<Subcategory>(response);
 }
 
 export async function getTopicsBySubcategory(subcategoryId: string): Promise<Topic[]> {
-  const response = await fetchJson(`/api/public/topics?subcategoryId=${encodeURIComponent(subcategoryId)}`);
+  const response = await fetchJson(`${ApiRoutes.public.topics}?subcategoryId=${encodeURIComponent(subcategoryId)}`);
   return normalizeList<Topic>(response);
 }
 
 export async function getLettersByTopic(topicId: string): Promise<Letter[]> {
-  const response = await fetchJson(`/api/public/letters?topicId=${encodeURIComponent(topicId)}`);
+  const response = await fetchJson(`${ApiRoutes.public.letters}?topicId=${encodeURIComponent(topicId)}`);
   return normalizeList<Letter>(response);
 }
 
 export async function createCategory(data: CreateCategoryData, token: string): Promise<Category> {
-  return fetchJson<{ category: Category }>('/api/content/categories', {
+  return fetchJson<{ category: Category }>(ApiRoutes.content.categories, {
     method: 'POST',
     headers: jsonHeaders(token),
     body: JSON.stringify(data),
@@ -131,7 +132,7 @@ export async function createCategory(data: CreateCategoryData, token: string): P
 }
 
 export async function updateCategory(id: string, data: Partial<CreateCategoryData>, token: string): Promise<Category> {
-  return fetchJson<{ category: Category }>('/api/content/categories', {
+  return fetchJson<{ category: Category }>(ApiRoutes.content.categories, {
     method: 'PUT',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id, ...data }),
@@ -139,7 +140,7 @@ export async function updateCategory(id: string, data: Partial<CreateCategoryDat
 }
 
 export async function deleteCategory(id: string, token: string): Promise<void> {
-  await fetchJson('/api/content/categories', {
+  await fetchJson(ApiRoutes.content.categories, {
     method: 'DELETE',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id }),
@@ -147,7 +148,7 @@ export async function deleteCategory(id: string, token: string): Promise<void> {
 }
 
 export async function createSubcategory(data: CreateSubcategoryData, token: string): Promise<Subcategory> {
-  return fetchJson<{ subcategory: Subcategory }>('/api/content/subcategories', {
+  return fetchJson<{ subcategory: Subcategory }>(ApiRoutes.content.subcategories, {
     method: 'POST',
     headers: jsonHeaders(token),
     body: JSON.stringify(data),
@@ -155,7 +156,7 @@ export async function createSubcategory(data: CreateSubcategoryData, token: stri
 }
 
 export async function updateSubcategory(id: string, data: Partial<CreateSubcategoryData>, token: string): Promise<Subcategory> {
-  return fetchJson<{ subcategory: Subcategory }>('/api/content/subcategories', {
+  return fetchJson<{ subcategory: Subcategory }>(ApiRoutes.content.subcategories, {
     method: 'PUT',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id, ...data }),
@@ -163,7 +164,7 @@ export async function updateSubcategory(id: string, data: Partial<CreateSubcateg
 }
 
 export async function deleteSubcategory(id: string, token: string): Promise<void> {
-  await fetchJson('/api/content/subcategories', {
+  await fetchJson(ApiRoutes.content.subcategories, {
     method: 'DELETE',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id }),
@@ -171,7 +172,7 @@ export async function deleteSubcategory(id: string, token: string): Promise<void
 }
 
 export async function createTopic(data: CreateTopicData, token: string): Promise<Topic> {
-  return fetchJson<{ data: Topic }>('/api/content/topics', {
+  return fetchJson<{ data: Topic }>(ApiRoutes.content.topics, {
     method: 'POST',
     headers: jsonHeaders(token),
     body: JSON.stringify(data),
@@ -179,7 +180,7 @@ export async function createTopic(data: CreateTopicData, token: string): Promise
 }
 
 export async function updateTopic(id: string, data: Partial<CreateTopicData>, token: string): Promise<Topic> {
-  return fetchJson<{ data: Topic }>('/api/content/topics', {
+  return fetchJson<{ data: Topic }>(ApiRoutes.content.topics, {
     method: 'PUT',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id, ...data }),
@@ -187,7 +188,7 @@ export async function updateTopic(id: string, data: Partial<CreateTopicData>, to
 }
 
 export async function deleteTopic(id: string, token: string): Promise<void> {
-  await fetchJson('/api/content/topics', {
+  await fetchJson(ApiRoutes.content.topics, {
     method: 'DELETE',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id }),
@@ -195,7 +196,7 @@ export async function deleteTopic(id: string, token: string): Promise<void> {
 }
 
 export async function createLetter(data: CreateLetterData, token: string): Promise<Letter> {
-  return fetchJson<{ letter: Letter }>('/api/content/letters', {
+  return fetchJson<{ letter: Letter }>(ApiRoutes.content.letters, {
     method: 'POST',
     headers: jsonHeaders(token),
     body: JSON.stringify(data),
@@ -203,7 +204,7 @@ export async function createLetter(data: CreateLetterData, token: string): Promi
 }
 
 export async function updateLetter(id: string, data: Partial<CreateLetterData>, token: string): Promise<Letter> {
-  return fetchJson<{ letter: Letter }>('/api/content/letters', {
+  return fetchJson<{ letter: Letter }>(ApiRoutes.content.letters, {
     method: 'PUT',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id, ...data }),
@@ -211,7 +212,7 @@ export async function updateLetter(id: string, data: Partial<CreateLetterData>, 
 }
 
 export async function deleteLetter(id: string, token: string): Promise<void> {
-  await fetchJson('/api/content/letters', {
+  await fetchJson(ApiRoutes.content.letters, {
     method: 'DELETE',
     headers: jsonHeaders(token),
     body: JSON.stringify({ id }),

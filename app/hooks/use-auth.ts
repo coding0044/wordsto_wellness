@@ -1,6 +1,7 @@
 'use client';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { Routes } from '@/lib/urls';
 import {
   login as loginService,
   signup as signupService,
@@ -13,7 +14,7 @@ import {
   LoginData,
   SignupData,
   ForgotPasswordData,
-} from '@/services/auth-service.ts';
+} from '@/services/auth-service';
 
 // Login mutation
 export const useLogin = () => {
@@ -24,9 +25,9 @@ export const useLogin = () => {
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
       if (data.user.role === 'admin') {
-        router.push('/admin-dashboard');
+        router.push(Routes.adminDashboard);
       } else {
-        router.push('/dashboard');
+        router.push(Routes.dashboard);
       }
     },
     onError: (error) => {
@@ -43,9 +44,9 @@ export const useSignup = () => {
     mutationFn: (data) => signupService(data),
     onSuccess: (data) => {
       if (data.user.role === 'admin') {
-        router.push('/admin-dashboard');
+        router.push(Routes.adminDashboard);
       } else {
-        router.push('/dashboard');
+        router.push(Routes.dashboard);
       }
     },
     onError: (error) => {
@@ -79,7 +80,7 @@ export const useForgotPassword = () => {
     mutationFn: (data) => forgotPasswordService(data),
     onSuccess: (_data, variables) => {
       sessionStorage.setItem('resetEmail', variables.email);
-      router.push(`/verify-otp?email=${encodeURIComponent(variables.email)}`);
+      router.push(`${Routes.auth.verifyOtp}?email=${encodeURIComponent(variables.email)}`);
     },
     onError: (error) => {
       console.error('Forgot password error:', error.message);
@@ -94,7 +95,7 @@ export const useResetPassword = () => {
   return useMutation<{ message: string }, Error, { token: string; password: string }>({
     mutationFn: async ({ token, password }) => resetPasswordService(token, password),
     onSuccess: () => {
-      router.push('/login');
+      router.push(Routes.auth.login);
     },
     onError: (error) => {
       console.error('Reset password error:', error.message);
@@ -108,7 +109,7 @@ export const useLogout = () => {
 
   return () => {
     localStorage.removeItem('token');
-    router.push('/login');
+    router.push(Routes.auth.login);
   };
 };
 

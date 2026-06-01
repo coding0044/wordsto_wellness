@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ApiRoutes, Routes } from '@/lib/urls';
 
 export default function Home() {
   const router = useRouter();
@@ -8,15 +9,15 @@ export default function Home() {
 
   useEffect(() => {
     // Check if user is logged in
-    fetch('/api/auth/me')
+    fetch(ApiRoutes.auth.me)
       .then(res => res.json())
       .then(data => {
         if (data.user) {
           // User is logged in, redirect to dashboard
           if (data.user.role === 'admin') {
-            router.replace('/admin-dashboard');
+            router.replace(Routes.adminDashboard);
           } else {
-            router.replace('/dashboard');
+            router.replace(Routes.dashboard);
           }
         } else {
           // User is not logged in, redirect to login
