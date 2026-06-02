@@ -49,6 +49,7 @@ export async function POST(req) {
 
     const planConfig = PLANS[planName];
 
+    // Update all plan fields
     user.planName = planName;
     user.planStatus = planConfig.planStatus;
     user.usesLeft = planConfig.usesLeft;
@@ -66,30 +67,50 @@ export async function POST(req) {
       resetFrequency: planConfig.resetFrequency,
     };
 
-    await user.save();
-
-    console.log('✓ Plan saved successfully:', {
+    console.log('📝 Before save - user state:', {
       userId: user._id,
       planName: user.planName,
       planStatus: user.planStatus,
       usesLeft: user.usesLeft,
       resetFrequency: user.resetFrequency,
+      plan: user.plan,
+      subscription: user.subscription,
+    });
+
+    try {
+      await user.save();
+      console.log('✅ User saved successfully!');
+    } catch (saveError) {
+      console.error('❌ Save error:', saveError.message);
+      throw saveError;
+    }
+
+    // Verify the save by fetching fresh from DB
+    const savedUser = await User.findById(currentUser.userId);
+    console.log('✓ Plan saved to database successfully:', {
+      userId: savedUser._id,
+      planName: savedUser.planName,
+      planStatus: savedUser.planStatus,
+      usesLeft: savedUser.usesLeft,
+      resetFrequency: savedUser.resetFrequency,
+      plan: savedUser.plan,
+      subscription: savedUser.subscription,
     });
 
     return NextResponse.json({
       success: true,
       message: `${planName} plan activated successfully.`,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        planName: user.planName,
-        planStatus: user.planStatus,
-        usesLeft: user.usesLeft,
-        resetFrequency: user.resetFrequency,
-        plan: user.plan,
-        subscription: user.subscription,
+        id: savedUser._id,
+        name: savedUser.name,
+        email: savedUser.email,
+        role: savedUser.role,
+        planName: savedUser.planName,
+        planStatus: savedUser.planStatus,
+        usesLeft: savedUser.usesLeft,
+        resetFrequency: savedUser.resetFrequency,
+        plan: savedUser.plan,
+        subscription: savedUser.subscription,
       },
     });
   } catch (error) {
