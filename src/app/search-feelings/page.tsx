@@ -6,6 +6,21 @@ import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
 import PlanStatusBadge from '../../components/PlanStatusBadge';
 
+function formatDate(value) {
+  if (!value) return '';
+  let d = new Date(value);
+  if (isNaN(d.getTime())) {
+    const alt = String(value).replace(' ', 'T');
+    d = new Date(alt);
+    if (isNaN(d.getTime())) {
+      const m = String(value).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (m) d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+  }
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString();
+}
+
 function Navbar({ user }) {
   const router = useRouter();
 
@@ -180,7 +195,7 @@ function SearchByFeelingsPage() {
                 <p className="text-sm text-gray-600 mb-5 line-clamp-4">{letter.content || 'No description available.'}</p>
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{letter.subcategory?.name || 'Unknown topic'}</span>
-                  <span>{letter.createdAt ? new Date(letter.createdAt).toLocaleDateString() : ''}</span>
+                  <span>{formatDate(letter.createdAt)}</span>
                 </div>
               </div>
             ))}

@@ -23,6 +23,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    console.log('✓ Current user fetched:', {
+      userId: user._id,
+      planName: user.planName,
+      planStatus: user.planStatus,
+      usesLeft: user.usesLeft,
+      resetFrequency: user.resetFrequency,
+      plan: user.plan,
+      subscription: user.subscription,
+    });
+
     return NextResponse.json({ user });
   } catch (error) {
     return NextResponse.json(

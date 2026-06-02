@@ -123,3 +123,11 @@ export async function deleteAdminUser(id: string): Promise<void> {
     method: 'DELETE',
   });
 }
+
+export async function subscribe(data: SubscriptionData): Promise<{ user: User }> {
+  return fetchJson<{ user: User }>('/api/auth/subscribe', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(data),
+  });
+}

@@ -28,6 +28,17 @@ import { Routes, ApiRoutes } from '@/lib/urls';
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
 
+function formatDate(value) {
+  if (!value) return 'N/A';
+  let d = new Date(value);
+  if (isNaN(d.getTime())) {
+    const alt = String(value).replace(' ', 'T');
+    d = new Date(alt);
+    if (isNaN(d.getTime())) return 'N/A';
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 // Pagination Component
 function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
   const getPageNumbers = () => {
@@ -915,7 +926,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                         <td style={tdStyle}>
                           <span style={badgeStyle(u.role==='admin'?'#ede9fe':'#eff6ff', u.role==='admin'?'#7c3aed':'#1d4ed8')}>{u.role}</span>
                         </td>
-                        <td style={{...tdStyle, color:'#94a3b8'}}>{new Date(u.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={{...tdStyle, color:'#94a3b8'}}>{formatDate(u.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
                             <button className="action-btn-edit" onClick={()=>openForm('user',u)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
@@ -945,8 +956,8 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{cat.name}</span>
                           </div>
                         </td>
-                        <td style={{...tdStyle, maxWidth:220}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{cat.description||'—'}</span></td>
-                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(cat.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={{...tdStyle, maxWidth:220}}><span style={{ color: cat.description && cat.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: cat.description && cat.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{cat.description && cat.description !== 'NULL' ? cat.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(cat.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
                             <button className="action-btn-edit" onClick={()=>openForm('category',cat)} style={{...actionBtnStyle('#eff6ff')}} title="Edit"><Edit2 size={15} color="#3b82f6" /></button>
@@ -977,8 +988,8 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                           </div>
                         </td>
                         <td style={tdStyle}><span style={badgeStyle(ACCENT.subcategories.light, ACCENT.subcategories.text)}>{typeof sub.category === 'string' ? categoryMap.get(sub.category) || '—' : sub.category?.name || '—'}</span></td>
-                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description||'—'}</span></td>
-                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(sub.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: sub.description && sub.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: sub.description && sub.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description && sub.description !== 'NULL' ? sub.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(sub.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
                             <button className="action-btn-edit" onClick={()=>openForm('subcategory',sub)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
@@ -1009,8 +1020,8 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                           </div>
                         </td>
                         <td style={tdStyle}><span style={badgeStyle(ACCENT.topics.light, ACCENT.topics.text)}>{typeof topic.subcategory === 'string' ? subcategoryMap.get(topic.subcategory) || '—' : topic.subcategory?.name || '—'}</span></td>
-                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description||'—'}</span></td>
-                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(topic.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: topic.description && topic.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: topic.description && topic.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description && topic.description !== 'NULL' ? topic.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(topic.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
                             <button className="action-btn-edit" onClick={()=>openForm('topic',topic)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>
@@ -1043,7 +1054,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                         <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(String(letter.topic)) || '—' : letter.topic?.name || '—'}</span></td>
                         <td style={tdStyle}><span style={{ color:'#334155', fontWeight:600 }}>{letter.letter_type || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
-                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{new Date(letter.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                        <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(letter.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
                             <button className="action-btn-edit" onClick={()=>openForm('letter',letter)} style={actionBtnStyle('#eff6ff')}><Edit2 size={15} color="#3b82f6" /></button>

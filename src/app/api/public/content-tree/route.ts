@@ -99,23 +99,56 @@ export async function GET(request) {
     });
 
     const subcategoryMap = {};
-    subcategories.forEach((subcategory) => {
+    const subcategoryAliasMap = {};
+    subcategories.forEach((subcategory, idx) => {
       const normalizedSubcategory = normalizeSubcategory(subcategory);
       subcategoryMap[normalizedSubcategory._id] = normalizedSubcategory;
+
+      const legacyId = toSafeString(subcategory.id ?? subcategory['`id`'] ?? subcategory['subcategory_id'] ?? subcategory['`subcategory_id`']);
+      const slug = toSafeLowerCase(subcategory.slug ?? subcategory['`slug`']);
+      const name = toSafeLowerCase(subcategory.name ?? subcategory['`name`']);
+
+      subcategoryAliasMap[normalizedSubcategory._id] = normalizedSubcategory._id;
+      if (legacyId) subcategoryAliasMap[legacyId] = normalizedSubcategory._id;
+      const positionalId = String(idx + 1);
+      if (!subcategoryAliasMap[positionalId]) subcategoryAliasMap[positionalId] = normalizedSubcategory._id;
+      if (slug) subcategoryAliasMap[slug] = normalizedSubcategory._id;
+      if (name) subcategoryAliasMap[name] = normalizedSubcategory._id;
     });
 
     Object.values(subcategoryMap).forEach((subcategory) => {
-      subcategory.topics = Object.values(topicMap).filter((topic) => topic.subcategory === subcategory._id);
+      subcategory.topics = Object.values(topicMap).filter((topic) => {
+        if (topic.subcategory === subcategory._id) return true;
+        const aliasMatch = subcategoryAliasMap[topic.subcategory] || subcategoryAliasMap[toSafeLowerCase(topic.subcategory)];
+        return aliasMatch === subcategory._id;
+      });
     });
 
     const categoryMap = {};
-    categories.forEach((category) => {
+    const categoryAliasMap = {}; // map legacy ids/slugs/names -> normalized id
+    categories.forEach((category, idx) => {
       const normalizedCategory = normalizeCategory(category);
       categoryMap[normalizedCategory._id] = normalizedCategory;
+
+      const legacyId = toSafeString(category.id ?? category['`id`'] ?? category['category_id'] ?? category['`category_id`']);
+      const slug = toSafeLowerCase(category.slug ?? category['`slug`']);
+      const name = toSafeLowerCase(category.name ?? category['`name`']);
+
+      categoryAliasMap[normalizedCategory._id] = normalizedCategory._id;
+      if (legacyId) categoryAliasMap[legacyId] = normalizedCategory._id;
+      // map by position in case legacy numeric ids were lost during import
+      const positionalId = String(idx + 1);
+      if (!categoryAliasMap[positionalId]) categoryAliasMap[positionalId] = normalizedCategory._id;
+      if (slug) categoryAliasMap[slug] = normalizedCategory._id;
+      if (name) categoryAliasMap[name] = normalizedCategory._id;
     });
 
     Object.values(categoryMap).forEach((category) => {
-      category.subcategories = Object.values(subcategoryMap).filter((subcategory) => subcategory.category === category._id);
+      category.subcategories = Object.values(subcategoryMap).filter((subcategory) => {
+        if (subcategory.category === category._id) return true;
+        const aliasMatch = categoryAliasMap[subcategory.category] || categoryAliasMap[toSafeLowerCase(subcategory.category)];
+        return aliasMatch === category._id;
+      });
     });
 
     const normalizedCategories = Object.values(categoryMap);

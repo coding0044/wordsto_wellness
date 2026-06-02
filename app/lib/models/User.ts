@@ -58,6 +58,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  plan: {
+    name: String,
+    status: String,
+    usesLeft: Number,
+    resetFrequency: String,
+  },
   subscription: {
     plan: String,
     status: String,

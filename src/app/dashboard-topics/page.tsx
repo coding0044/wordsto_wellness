@@ -6,6 +6,21 @@ import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
 import PlanStatusBadge from '../../components/PlanStatusBadge';
 
+function formatDate(value) {
+  if (!value) return '';
+  let d = new Date(value);
+  if (isNaN(d.getTime())) {
+    const alt = String(value).replace(' ', 'T');
+    d = new Date(alt);
+    if (isNaN(d.getTime())) {
+      const m = String(value).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (m) d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+  }
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString();
+}
+
 // Navigation Component
 function Navbar({ user }) {
   const router = useRouter();
@@ -60,11 +75,9 @@ function TopicCard({ topic }) {
         <span className="px-2.5 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-semibold uppercase tracking-wide">Topic</span>
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-violet-600 transition-colors line-clamp-2">{topic.name}</h3>
-      {topic.description && (
-        <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed">{topic.description}</p>
-      )}
+      <p className={`text-sm mb-4 line-clamp-3 leading-relaxed ${topic.description ? 'text-gray-600' : 'text-gray-400 italic'}`}>{topic.description || 'No description'}</p>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-500">{topic.createdAt ? new Date(topic.createdAt).toLocaleDateString() : ''}</span>
+        <span className="text-xs text-gray-500">{formatDate(topic.createdAt)}</span>
         <div className="flex items-center space-x-1 text-violet-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
           <span>View</span>
           <span>→</span>

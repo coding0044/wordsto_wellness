@@ -7,6 +7,21 @@ import Link from 'next/link';
 import { ApiRoutes, Routes } from '@/lib/urls';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
+function formatDate(value) {
+  if (!value) return '';
+  let d = new Date(value);
+  if (isNaN(d.getTime())) {
+    const alt = String(value).replace(' ', 'T');
+    d = new Date(alt);
+    if (isNaN(d.getTime())) {
+      const m = String(value).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (m) d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+  }
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString();
+}
+
 // Navigation Component
 function Navbar({ user }) {
   const router = useRouter();
@@ -131,7 +146,7 @@ function LetterCard({ letter, onReadMore }) {
         <p className="text-sm text-gray-600 mb-4 line-clamp-4 leading-relaxed">{letter.content}</p>
       )}
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-500">{letter.createdAt ? new Date(letter.createdAt).toLocaleDateString() : ''}</span>
+        <span className="text-xs text-gray-500">{formatDate(letter.createdAt)}</span>
         <button 
           onClick={() => onReadMore(letter)}
           className="flex items-center space-x-1 text-orange-600 font-semibold text-sm hover:translate-x-1 transition-transform"

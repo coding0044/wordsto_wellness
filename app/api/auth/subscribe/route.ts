@@ -53,6 +53,12 @@ export async function POST(req) {
     user.planStatus = planConfig.planStatus;
     user.usesLeft = planConfig.usesLeft;
     user.resetFrequency = planConfig.resetFrequency;
+    user.plan = {
+      name: planName,
+      status: planConfig.planStatus,
+      usesLeft: planConfig.usesLeft,
+      resetFrequency: planConfig.resetFrequency,
+    };
     user.subscription = {
       plan: planName,
       status: planConfig.planStatus,
@@ -61,6 +67,14 @@ export async function POST(req) {
     };
 
     await user.save();
+
+    console.log('✓ Plan saved successfully:', {
+      userId: user._id,
+      planName: user.planName,
+      planStatus: user.planStatus,
+      usesLeft: user.usesLeft,
+      resetFrequency: user.resetFrequency,
+    });
 
     return NextResponse.json({
       success: true,
@@ -74,6 +88,7 @@ export async function POST(req) {
         planStatus: user.planStatus,
         usesLeft: user.usesLeft,
         resetFrequency: user.resetFrequency,
+        plan: user.plan,
         subscription: user.subscription,
       },
     });

@@ -102,7 +102,8 @@ const plans = [
 
 function PricingCard({ plan, userPlan }) {
   const router = useRouter();
-  const isCurrentPlan = userPlan?.toLowerCase() === plan.name.toLowerCase();
+  const normalizedUserPlan = userPlan?.toLowerCase().trim();
+  const isCurrentPlan = normalizedUserPlan === plan.name.toLowerCase();
   const buttonLabel = isCurrentPlan
     ? 'Current plan'
     : plan.name === 'Free'

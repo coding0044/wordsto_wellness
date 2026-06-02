@@ -92,13 +92,29 @@ export async function GET(request) {
     });
 
     const categoryMap = {};
-    categories.forEach((category) => {
+    const categoryAliasMap = {};
+    categories.forEach((category, idx) => {
       const normalizedCategory = normalizeCategory(category);
       categoryMap[normalizedCategory._id] = normalizedCategory;
+
+      const legacyId = String(category.id ?? category['`id`'] ?? category['category_id'] ?? category['`category_id`'] || '');
+      const slug = (category.slug ?? category['`slug`'] || '').toLowerCase();
+      const name = (category.name ?? category['`name`'] || '').toLowerCase();
+
+      categoryAliasMap[normalizedCategory._id] = normalizedCategory._id;
+      if (legacyId) categoryAliasMap[legacyId] = normalizedCategory._id;
+      const positionalId = String(idx + 1);
+      if (!categoryAliasMap[positionalId]) categoryAliasMap[positionalId] = normalizedCategory._id;
+      if (slug) categoryAliasMap[slug] = normalizedCategory._id;
+      if (name) categoryAliasMap[name] = normalizedCategory._id;
     });
 
     Object.values(categoryMap).forEach((category) => {
-      category.subcategories = Object.values(subcategoryMap).filter((subcategory) => subcategory.category === category._id);
+      category.subcategories = Object.values(subcategoryMap).filter((subcategory) => {
+        if (subcategory.category === category._id) return true;
+        const aliasMatch = categoryAliasMap[subcategory.category] || categoryAliasMap[(subcategory.category || '').toLowerCase()];
+        return aliasMatch === category._id;
+      });
     });
 
     const normalizedCategories = Object.values(categoryMap);

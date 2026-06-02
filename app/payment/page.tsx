@@ -1,9 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { subscribe } from '@/services/auth-service';
+import { Routes } from '@/lib/urls';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
 const paymentPlans = {
@@ -26,16 +28,17 @@ const paymentPlans = {
 
 function normalizePlanKey(planKey) {
   if (!planKey) return '';
-  const normalized = planKey.toLowerCase();
+  const normalized = planKey.toLowerCase().trim();
   if (normalized === 'pro') return 'expert';
   return normalized;
 }
 
 export default function PaymentPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   // Get current user first, then determine the effective plan: prefer query param, fall back to the user's current plan, then Free
-  const { data: userData, isLoading, error } = useCurrentUser();
+  const { data: userData, isLoading, error, refetch } = useCurrentUser();
   const queryPlanKey = normalizePlanKey(searchParams.get('plan'));
   const currentPlanFromUser = userData?.planName || userData?.plan?.name || userData?.subscription?.plan;
   const userPlanKey = currentPlanFromUser ? normalizePlanKey(currentPlanFromUser) : 'free';
@@ -67,6 +70,9 @@ export default function PaymentPage() {
         setErrorMessage('');
         setIsSubmitting(true);
         await subscribe({ plan: plan.name, status: 'active' });
+        console.log('✓ Subscribe call completed, now refetching user data...');
+        const refetchResult = await refetch();
+        console.log('✓ Refetch completed with data:', refetchResult.data);
         router.push(`${Routes.paymentSuccess}?plan=${planKey}`);
       } catch (err) {
         setErrorMessage(err?.message || 'Failed to switch to the free plan. Please try again.');
@@ -85,6 +91,9 @@ export default function PaymentPage() {
       setErrorMessage('');
       setIsSubmitting(true);
       await subscribe({ plan: plan.name, status: 'active' });
+      console.log('✓ Subscribe call completed, now refetching user data...');
+      const refetchResult = await refetch();
+      console.log('✓ Refetch completed with data:', refetchResult.data);
       router.push(`${Routes.paymentSuccess}?plan=${planKey}`);
     } catch (err) {
       setErrorMessage(err?.message || 'Failed to complete the subscription. Please try again.');
