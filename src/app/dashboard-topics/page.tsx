@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
-import PlanStatusBadge from '../../components/PlanStatusBadge';
+import PlanStatusBadge from '@/components/plan-status-badge';
 
 function formatDate(value) {
   if (!value) return '';

@@ -985,7 +985,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                     action={<AddBtn label="Subcategory" onClick={()=>openForm('subcategory')} ac={ACCENT.subcategories} />}
                   />
                   <Table
-                    cols={['Subcategory','Category','Description','Created','Actions']}
+                    cols={['Subcategory','Description','Created','Actions']}
                     icon={FolderTree} empty="No subcategories yet" loading={contentTreeLoading} tabName="subcategories"
                     rows={subcategoriesData_paginated.items.map(sub=>(
                       <tr key={sub._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
@@ -995,7 +995,6 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{sub.name}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.subcategories.light, ACCENT.subcategories.text)}>{typeof sub.category === 'string' ? categoryMap.get(sub.category) || '—' : sub.category?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:200}}><span style={{ color: sub.description && sub.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: sub.description && sub.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description && sub.description !== 'NULL' ? sub.description : 'No Description'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(sub.createdAt)}</td>
                         <td style={tdStyle}>
@@ -1017,7 +1016,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                     action={<AddBtn label="Topic" onClick={()=>openForm('topic')} ac={ACCENT.topics} />}
                   />
                   <Table
-                    cols={['Topic','Subcategory','Description','Created','Actions']}
+                    cols={['Topic','Description','Created','Actions']}
                     icon={BookOpen} empty="No topics yet" loading={contentTreeLoading} tabName="topics"
                     rows={topicsData_paginated.items.map(topic=>(
                       <tr key={topic._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
@@ -1027,7 +1026,6 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{topic.name}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.topics.light, ACCENT.topics.text)}>{typeof topic.subcategory === 'string' ? subcategoryMap.get(topic.subcategory) || '—' : topic.subcategory?.name || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:200}}><span style={{ color: topic.description && topic.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: topic.description && topic.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description && topic.description !== 'NULL' ? topic.description : 'No Description'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(topic.createdAt)}</td>
                         <td style={tdStyle}>
@@ -1049,7 +1047,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                     action={<AddBtn label="Letter" onClick={()=>openForm('letter')} ac={ACCENT.letters} />}
                   />
                   <Table
-                    cols={['Letter','Topic','Type','Content Preview','Created','Actions']}
+                    cols={['Letter','Type','Content Preview','Created','Actions']}
                     icon={FileText} empty="No letters yet" loading={contentTreeLoading} tabName="letters"
                     rows={lettersData_paginated.items.map(letter=>(
                       <tr key={letter._id} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background=''}>
@@ -1059,7 +1057,6 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{letter.title}</span>
                           </div>
                         </td>
-                        <td style={tdStyle}><span style={badgeStyle(ACCENT.letters.light, ACCENT.letters.text)}>{typeof letter.topic === 'string' ? topicMap.get(String(letter.topic)) || '—' : letter.topic?.name || '—'}</span></td>
                         <td style={tdStyle}><span style={{ color:'#334155', fontWeight:600 }}>{letter.letter_type || '—'}</span></td>
                         <td style={{...tdStyle, maxWidth:250}}><span style={{ color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{letter.content||'—'}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(letter.createdAt)}</td>

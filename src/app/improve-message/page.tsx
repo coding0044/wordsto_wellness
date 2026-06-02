@@ -3,7 +3,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import Link from 'next/link';
-import PlanStatusBadge from '../../components/PlanStatusBadge';
+import PlanStatusBadge from '@/components/plan-status-badge';
 
 function Navbar({ user }) {
   const router = useRouter();

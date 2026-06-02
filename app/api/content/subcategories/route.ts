@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../lib/db';
-import Subcategory from '../../../lib/models/Subcategory';
-import Topic from '../../../lib/models/Topic';
-import Letter from '../../../lib/models/Letter';
-import { verifyToken } from '../../../lib/auth';
+import dbConnect from '@/lib/db';
+import Subcategory from '@/lib/models/Subcategory';
+import Topic from '@/lib/models/Topic';
+import Letter from '@/lib/models/Letter';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET(request) {
   try {

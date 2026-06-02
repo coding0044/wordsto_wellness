@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/db';
-import User from '../../../lib/models/User';
+import User from '@/lib/models/User';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 

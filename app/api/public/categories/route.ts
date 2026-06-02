@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../lib/db';
-import Category from '../../../lib/models/Category';
-import Subcategory from '../../../lib/models/Subcategory';
-import Topic from '../../../lib/models/Topic';
-import Letter from '../../../lib/models/Letter';
+import dbConnect from '@/lib/db';
+import Category from '@/lib/models/Category';
+import Subcategory from '@/lib/models/Subcategory';
+import Topic from '@/lib/models/Topic';
+import Letter from '@/lib/models/Letter';
 import { normalizeId } from '@/lib/api-utils';
 
 function normalizeCategory(category) {
