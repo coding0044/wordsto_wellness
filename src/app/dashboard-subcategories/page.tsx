@@ -112,7 +112,11 @@ function SubcategoriesContent() {
   const currentCategory = categories.find(c => normalizeEntityId(c) === normalizedCategoryId);
   const subcategories = currentCategory?.subcategories || [];
 
-  const filteredSubcategories = subcategories.filter(sub =>
+  const sortedSubcategories = [...subcategories].sort((a, b) =>
+    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
+  );
+
+  const filteredSubcategories = sortedSubcategories.filter(sub =>
     sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sub.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );

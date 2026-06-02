@@ -965,7 +965,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{cat.name}</span>
                           </div>
                         </td>
-                        <td style={{...tdStyle, maxWidth:220}}><span style={{ color: cat.description && cat.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: cat.description && cat.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{cat.description && cat.description !== 'NULL' ? cat.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, maxWidth:220}}><span style={{ color: !cat.description || cat.description === 'NULL' ? '#94a3b8' : '#64748b', fontStyle: !cat.description || cat.description === 'NULL' ? 'italic' : 'normal', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{!cat.description || cat.description === 'NULL' ? 'No Description' : cat.description}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(cat.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
@@ -996,7 +996,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{sub.name}</span>
                           </div>
                         </td>
-                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: sub.description && sub.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: sub.description && sub.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{sub.description && sub.description !== 'NULL' ? sub.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: !sub.description || sub.description === 'NULL' ? '#94a3b8' : '#64748b', fontStyle: !sub.description || sub.description === 'NULL' ? 'italic' : 'normal', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{!sub.description || sub.description === 'NULL' ? 'No Description' : sub.description}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(sub.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>
@@ -1027,7 +1027,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
                             <span style={{ fontWeight:600, color:'#0f172a' }}>{topic.name}</span>
                           </div>
                         </td>
-                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: topic.description && topic.description !== 'NULL' ? '#64748b' : '#94a3b8', fontStyle: topic.description && topic.description !== 'NULL' ? 'normal' : 'italic', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{topic.description && topic.description !== 'NULL' ? topic.description : 'No Description'}</span></td>
+                        <td style={{...tdStyle, maxWidth:200}}><span style={{ color: !topic.description || topic.description === 'NULL' ? '#94a3b8' : '#64748b', fontStyle: !topic.description || topic.description === 'NULL' ? 'italic' : 'normal', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{!topic.description || topic.description === 'NULL' ? 'No Description' : topic.description}</span></td>
                         <td style={{...tdStyle, color:'#94a3b8', whiteSpace:'nowrap'}}>{formatDate(topic.createdAt)}</td>
                         <td style={tdStyle}>
                           <div style={{ display:'flex', gap:4 }}>

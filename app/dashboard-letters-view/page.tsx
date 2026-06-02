@@ -197,7 +197,11 @@ function LettersViewContent() {
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
   
-  const filteredLetters = letters.filter(letter =>
+  const sortedLetters = [...letters].sort((a, b) =>
+    (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
+  );
+  
+  const filteredLetters = sortedLetters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     letter.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );

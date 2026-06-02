@@ -98,8 +98,8 @@ function CategoryCard({ category, index }) {
       <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors line-clamp-2">
         {category.name}
       </h3>
-      <p className={`text-sm mb-4 line-clamp-3 leading-relaxed ${category.description && category.description !== 'NULL' ? 'text-gray-600' : 'text-gray-400 italic'}`}>
-        {category.description && category.description !== 'NULL' ? category.description : 'No description'}
+      <p className={`text-sm mb-4 line-clamp-3 leading-relaxed ${!category.description || category.description === 'NULL' ? 'text-gray-400 italic' : 'text-gray-600'}`}>
+        {!category.description || category.description === 'NULL' ? 'No description' : category.description}
       </p>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <span className="text-xs text-gray-500">{formatDate(category.createdAt)}</span>
@@ -132,11 +132,18 @@ function BrowseLettersContent() {
 
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
 
-  // Filter categories based on search
-  const filteredCategories = categories.filter(cat =>
-    cat.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cat.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const sortedCategories = [...categories].sort((a, b) =>
+    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
   );
+
+  const filteredCategories = sortedCategories.filter((cat) => {
+    const name = cat.name || '';
+    const desc = cat.description || '';
+    return (
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      desc.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   if (!isClient || userLoading) {
     return (

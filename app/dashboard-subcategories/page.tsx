@@ -74,7 +74,7 @@ function SubcategoryCard({ subcategory }) {
         </div>
         <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-semibold uppercase tracking-wide">Subcategory</span>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">{subcategory.name}</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">{subcategory.name} Issues</h3>
       <p className={`text-sm mb-4 line-clamp-3 leading-relaxed ${subcategory.description ? 'text-gray-600' : 'text-gray-400 italic'}`}>{subcategory.description || 'No description'}</p>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <span className="text-xs text-gray-500">{formatDate(subcategory.createdAt)}</span>
@@ -111,7 +111,11 @@ function SubcategoriesContent() {
   const currentCategory = categories.find(c => normalizeEntityId(c) === normalizedCategoryId);
   const subcategories = currentCategory?.subcategories || [];
 
-  const filteredSubcategories = subcategories.filter(sub =>
+  const sortedSubcategories = [...subcategories].sort((a, b) =>
+    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
+  );
+
+  const filteredSubcategories = sortedSubcategories.filter(sub =>
     sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sub.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -213,7 +217,7 @@ function SubcategoriesContent() {
             {filteredSubcategories.map((subcategory) => (
               <SubcategoryCard key={subcategory._id} subcategory={subcategory} />
             ))}
-          </div>
+            </div>
         )}
 
         <footer className="mt-16 text-center">

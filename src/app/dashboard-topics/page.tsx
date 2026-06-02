@@ -112,7 +112,11 @@ function TopicsContent() {
   const topics = currentSubcategory?.topics || [];
   const categoryId = currentSubcategory?.category;
 
-  const filteredTopics = topics.filter(topic =>
+  const sortedTopics = [...topics].sort((a, b) =>
+    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
+  );
+
+  const filteredTopics = sortedTopics.filter(topic =>
     topic.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     topic.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
