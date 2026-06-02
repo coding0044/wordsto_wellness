@@ -28,7 +28,7 @@ import { Routes, ApiRoutes } from '@/lib/urls';
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
 
-function formatDate(value) {
+function formatDate(value: string | number | Date | null | undefined): string {
   if (!value) return 'N/A';
   let d = new Date(value);
   if (isNaN(d.getTime())) {
@@ -40,9 +40,18 @@ function formatDate(value) {
 }
 
 // Pagination Component
-function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
+type PaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems: number;
+  itemsPerPage: number;
+  accentColor: { from: string; to: string };
+};
+
+function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }: PaginationProps) {
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: Array<number | '...'> = [];
     const maxVisible = 5;
     
     if (totalPages <= maxVisible) {
@@ -130,7 +139,7 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           ) : (
             <button
               key={page}
-              onClick={() => onPageChange(page)}
+              onClick={() => onPageChange(Number(page))}
               style={{
                 padding: '8px 14px',
                 borderRadius: 8,
@@ -220,7 +229,7 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
 
   useEffect(() => { setIsClient(true); }, []);
 
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
