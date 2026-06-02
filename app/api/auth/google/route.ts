@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
+import User from '@/lib/models/User'; // Corrected import path
 import { generateToken, setAuthCookie } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 
