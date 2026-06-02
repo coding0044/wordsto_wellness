@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../lib/db';
-import Subcategory from '../../../lib/models/Subcategory';
+import dbConnect from '@/lib/db';
+import Subcategory from '@/lib/models/Subcategory';
 
 function normalizeSubcategory(subcategory) {
   const categoryValue = subcategory.category ?? subcategory['category'] ?? subcategory['category_id'] ?? subcategory['`category_id`'];

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../lib/db';
-import Category from '../../../lib/models/Category';
-import Subcategory from '../../../lib/models/Subcategory';
-import { verifyToken } from '../../../lib/auth';
+import dbConnect from '@/lib/db';
+import Category from '@/lib/models/Category';
+import Subcategory from '@/lib/models/Subcategory';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET(request) {
   try {

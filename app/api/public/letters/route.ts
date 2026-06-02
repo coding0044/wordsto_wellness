@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
-import dbConnect from '../../../lib/db';
-import Letter from '../../../lib/models/Letter';
-import Topic from '../../../lib/models/Topic';
+import dbConnect from '@/lib/db';
+import Letter from '@/lib/models/Letter';
+import Topic from '@/lib/models/Topic';
 import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/api-utils';
 
 function normalizeLetter(letter) {
