@@ -132,11 +132,18 @@ function BrowseLettersContent() {
 
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
 
-  // Filter categories based on search
-  const filteredCategories = categories.filter(cat =>
-    cat.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cat.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const sortedCategories = [...categories].sort((a, b) =>
+    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
   );
+
+  const filteredCategories = sortedCategories.filter((cat) => {
+    const name = cat.name || '';
+    const desc = cat.description || '';
+    return (
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      desc.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   if (!isClient || userLoading) {
     return (
