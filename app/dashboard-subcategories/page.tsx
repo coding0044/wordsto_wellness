@@ -67,7 +67,7 @@ function Navbar({ user }) {
 // Subcategory Card Component
 function SubcategoryCard({ subcategory }) {
   return (
-    <Link href={`/dashboard-topics?sub=${subcategory._id}`} className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-200 transition-all duration-200">
+    <Link href={`/dashboard-topics?sub=${normalizeEntityId(subcategory)}`} className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-200 transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-2xl shadow-md group-hover:scale-105 transition-transform">
           📁
