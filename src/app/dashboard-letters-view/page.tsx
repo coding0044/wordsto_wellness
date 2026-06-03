@@ -191,9 +191,35 @@ function LettersViewContent() {
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
 
-  const sortedLetters = [...letters].sort((a, b) =>
-    (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
-  );
+  // Find parent category and subcategory for breadcrumb
+  let currentCategory = null;
+  let currentSubcategory = null;
+  
+  for (const category of categories) {
+    for (const subcategory of category.subcategories || []) {
+      if (subcategory.topics?.some((t) => String(t._id) === String(topicId))) {
+        currentCategory = category;
+        currentSubcategory = subcategory;
+        break;
+      }
+    }
+    if (currentCategory) break;
+  }
+
+  const sortedLetters = [...letters].sort((a, b) => {
+    const typeA = String(a?.letter_type || '').toUpperCase();
+    const typeB = String(b?.letter_type || '').toUpperCase();
+    
+    // First sort by letter_type (A, B, C, etc.)
+    if (typeA !== typeB) {
+      return typeA.localeCompare(typeB);
+    }
+    
+    // Then sort by level (a, b, c) within the same letter_type
+    const levelA = String(a?.level || '').toLowerCase();
+    const levelB = String(b?.level || '').toLowerCase();
+    return levelA.localeCompare(levelB);
+  });
 
   const filteredLetters = sortedLetters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -222,14 +248,28 @@ function LettersViewContent() {
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
-          <Link href="/dashboard" className="hover:text-sky-600 transition-colors">Dashboard</Link>
+        <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
+          <Link href="/dashboard" className="text-gray-500 hover:text-sky-600 transition-colors">Dashboard</Link>
           <span>/</span>
-          <Link href="/dashboard-letters" className="hover:text-sky-600 transition-colors">Categories</Link>
-          <span>/</span>
-          <Link href={currentTopic ? `/dashboard-subcategories?cat=${currentTopic?.subcategory}` : '/dashboard-letters'} className="hover:text-sky-600 transition-colors">Subcategories</Link>
-          <span>/</span>
-          <span className="text-gray-900 font-medium">{currentTopicDisplayName}</span>
+          <Link href="/dashboard-letters" className="text-gray-500 hover:text-sky-600 transition-colors">Letters</Link>
+          {currentCategory && (
+            <>
+              <span>/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</span>
+            </>
+          )}
+          {currentSubcategory && (
+            <>
+              <span>/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</span>
+            </>
+          )}
+          {currentTopic && (
+            <>
+              <span>/</span>
+              <span className="text-gray-900 font-semibold">{currentTopicDisplayName}</span>
+            </>
+          )}
         </div>
 
         {/* Header */}

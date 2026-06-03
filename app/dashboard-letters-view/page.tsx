@@ -23,15 +23,13 @@ function formatDate(value) {
 }
 
 const letterCategoryMap = {
-  A: { title: 'General Confrontation Letters', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700', description: 'Express concerns or address issues directly' },
-  B: { title: 'Confrontation Letters to Address Need for Professional Treatment', borderClass: 'border-orange-500', pillClass: 'bg-orange-50 text-orange-700', description: 'For workplace or professional relationships' },
-  C: { title: 'Confrontation Letters to Address Lack of Follow-Through with Treatment Recommendations', borderClass: 'border-violet-500', pillClass: 'bg-violet-50 text-violet-700', description: 'Continue important conversations' },
-  D: { title: 'Taking Responsibility and Apologizing Letter', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Make amends and rebuild trust' },
-  E: { title: 'Defending Oneself and Denying Responsibility Letter', borderClass: 'border-red-500', pillClass: 'bg-red-50 text-red-700', description: 'Share your side of the story' },
-  F: { title: 'Forgiving Someone Letter', borderClass: 'border-teal-500', pillClass: 'bg-teal-50 text-teal-700', description: 'Let go and move forward' },
-  G: { title: 'Motivating, Encouraging, Supporting or Thanking Someone Letter', borderClass: 'border-amber-500', pillClass: 'bg-amber-50 text-amber-700', description: 'Encourage and uplift others' },
-  H: { title: 'Self Disclosure Letter', borderClass: 'border-pink-500', pillClass: 'bg-pink-50 text-pink-700', description: 'Share personal feelings and experiences' },
-  I: { title: 'Congratulations Letter', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Celebrate achievements and milestones' },
+  A: { title: 'Confront or Hold Someone Accountable ', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700', description: 'Express concerns or address issues directly' },
+  B: { title: 'Take Responsibility and Apologize for this Problem', borderClass: 'border-orange-500', pillClass: 'bg-orange-50 text-orange-700', description: 'For workplace or professional relationships' },
+  C: { title: 'Defend or Deny this Problem', borderClass: 'border-violet-500', pillClass: 'bg-violet-50 text-violet-700', description: 'Continue important conversations' },
+  D: { title: 'Forgive Someone for this Problem', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Make amends and rebuild trust' },
+  E: { title: 'Encourage, Motivate or Support Someone Having This Problem', borderClass: 'border-red-500', pillClass: 'bg-red-50 text-red-700', description: 'Share your side of the story' },
+  F: { title: 'Self-Disclosure of this Problem', borderClass: 'border-teal-500', pillClass: 'bg-teal-50 text-teal-700', description: 'Let go and move forward' },
+  G: { title: 'Congratulate or Thank Someone', borderClass: 'border-amber-500', pillClass: 'bg-amber-50 text-amber-700', description: 'Encourage and uplift others' },
 };
 
 const letterLevelMap = {
@@ -252,9 +250,35 @@ function LettersViewContent() {
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
   
-  const sortedLetters = [...letters].sort((a, b) =>
-    (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
-  );
+  // Find parent category and subcategory for breadcrumb
+  let currentCategory = null;
+  let currentSubcategory = null;
+  
+  for (const category of categories) {
+    for (const subcategory of category.subcategories || []) {
+      if (subcategory.topics?.some((t) => String(t._id) === String(topicId))) {
+        currentCategory = category;
+        currentSubcategory = subcategory;
+        break;
+      }
+    }
+    if (currentCategory) break;
+  }
+  
+  const sortedLetters = [...letters].sort((a, b) => {
+    const typeA = String(a?.letter_type || '').toUpperCase();
+    const typeB = String(b?.letter_type || '').toUpperCase();
+    
+    // First sort by letter_type (A, B, C, etc.)
+    if (typeA !== typeB) {
+      return typeA.localeCompare(typeB);
+    }
+    
+    // Then sort by level (a, b, c) within the same letter_type
+    const levelA = String(a?.level || '').toLowerCase();
+    const levelB = String(b?.level || '').toLowerCase();
+    return levelA.localeCompare(levelB);
+  });
   
   const filteredLetters = sortedLetters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -296,7 +320,7 @@ function LettersViewContent() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6 text-sm">
+        <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
           <Link href="/dashboard" className="text-gray-500 hover:text-sky-600 transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -305,8 +329,24 @@ function LettersViewContent() {
           </Link>
           <span className="text-gray-400">/</span>
           <Link href="/dashboard-letters" className="text-gray-500 hover:text-sky-600 transition-colors">Categories</Link>
-          <span className="text-gray-400">/</span>
-          <span className="text-gray-900 font-medium">{currentTopicDisplayName}</span>
+          {currentCategory && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</span>
+            </>
+          )}
+          {currentSubcategory && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</span>
+            </>
+          )}
+          {currentTopic && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-900 font-semibold">{currentTopicDisplayName}</span>
+            </>
+          )}
         </div>
 
         {/* Header */}
