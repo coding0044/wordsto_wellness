@@ -255,13 +255,13 @@ function LettersViewContent() {
           {currentCategory && (
             <>
               <span>/</span>
-              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</span>
+              <Link href={`/dashboard-subcategories?cat=${currentCategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</Link>
             </>
           )}
           {currentSubcategory && (
             <>
               <span>/</span>
-              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</span>
+              <Link href={`/dashboard-topics?sub=${currentSubcategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</Link>
             </>
           )}
           {currentTopic && (
@@ -275,12 +275,12 @@ function LettersViewContent() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <button onClick={() => router.back()} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+            <Link href={currentCategory ? `/dashboard-subcategories?cat=${currentCategory._id}` : '/dashboard-letters'} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
               </svg>
               Back
-            </button>
+            </Link>
           </div>
           <div className="flex items-center gap-4 mb-2">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-md">

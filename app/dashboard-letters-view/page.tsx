@@ -332,13 +332,13 @@ function LettersViewContent() {
           {currentCategory && (
             <>
               <span className="text-gray-400">/</span>
-              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</span>
+              <Link href={`/dashboard-subcategories?cat=${currentCategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</Link>
             </>
           )}
           {currentSubcategory && (
             <>
               <span className="text-gray-400">/</span>
-              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</span>
+              <Link href={`/dashboard-topics?sub=${currentSubcategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</Link>
             </>
           )}
           {currentTopic && (
@@ -352,12 +352,12 @@ function LettersViewContent() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={() => router.back()} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-white/50">
+            <Link href={currentCategory ? `/dashboard-subcategories?cat=${currentCategory._id}` : '/dashboard-letters'} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-white/50">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
               </svg>
               Back to Categories
-            </button>
+            </Link>
             
             {!isPremiumOrExpert && (
               <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
