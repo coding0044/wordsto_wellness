@@ -23,15 +23,13 @@ function formatDate(value) {
 }
 
 const letterCategoryMap = {
-  A: { title: 'General Confrontation Letters', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700', description: 'Express concerns or address issues directly' },
-  B: { title: 'Confrontation Letters to Address Need for Professional Treatment', borderClass: 'border-orange-500', pillClass: 'bg-orange-50 text-orange-700', description: 'For workplace or professional relationships' },
-  C: { title: 'Confrontation Letters to Address Lack of Follow-Through with Treatment Recommendations', borderClass: 'border-violet-500', pillClass: 'bg-violet-50 text-violet-700', description: 'Continue important conversations' },
-  D: { title: 'Taking Responsibility and Apologizing Letter', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Make amends and rebuild trust' },
-  E: { title: 'Defending Oneself and Denying Responsibility Letter', borderClass: 'border-red-500', pillClass: 'bg-red-50 text-red-700', description: 'Share your side of the story' },
-  F: { title: 'Forgiving Someone Letter', borderClass: 'border-teal-500', pillClass: 'bg-teal-50 text-teal-700', description: 'Let go and move forward' },
-  G: { title: 'Motivating, Encouraging, Supporting or Thanking Someone Letter', borderClass: 'border-amber-500', pillClass: 'bg-amber-50 text-amber-700', description: 'Encourage and uplift others' },
-  H: { title: 'Self Disclosure Letter', borderClass: 'border-pink-500', pillClass: 'bg-pink-50 text-pink-700', description: 'Share personal feelings and experiences' },
-  I: { title: 'Congratulations Letter', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Celebrate achievements and milestones' },
+  A: { title: 'Confront or Hold Someone Accountable ', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700', description: 'Express concerns or address issues directly' },
+  B: { title: 'Take Responsibility and Apologize for this Problem', borderClass: 'border-orange-500', pillClass: 'bg-orange-50 text-orange-700', description: 'For workplace or professional relationships' },
+  C: { title: 'Defend or Deny this Problem', borderClass: 'border-violet-500', pillClass: 'bg-violet-50 text-violet-700', description: 'Continue important conversations' },
+  D: { title: 'Forgive Someone for this Problem', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700', description: 'Make amends and rebuild trust' },
+  E: { title: 'Encourage, Motivate or Support Someone Having This Problem', borderClass: 'border-red-500', pillClass: 'bg-red-50 text-red-700', description: 'Share your side of the story' },
+  F: { title: 'Self-Disclosure of this Problem', borderClass: 'border-teal-500', pillClass: 'bg-teal-50 text-teal-700', description: 'Let go and move forward' },
+  G: { title: 'Congratulate or Thank Someone', borderClass: 'border-amber-500', pillClass: 'bg-amber-50 text-amber-700', description: 'Encourage and uplift others' },
 };
 
 const letterLevelMap = {
