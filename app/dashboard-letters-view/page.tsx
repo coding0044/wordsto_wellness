@@ -250,9 +250,35 @@ function LettersViewContent() {
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
   
-  const sortedLetters = [...letters].sort((a, b) =>
-    (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
-  );
+  // Find parent category and subcategory for breadcrumb
+  let currentCategory = null;
+  let currentSubcategory = null;
+  
+  for (const category of categories) {
+    for (const subcategory of category.subcategories || []) {
+      if (subcategory.topics?.some((t) => String(t._id) === String(topicId))) {
+        currentCategory = category;
+        currentSubcategory = subcategory;
+        break;
+      }
+    }
+    if (currentCategory) break;
+  }
+  
+  const sortedLetters = [...letters].sort((a, b) => {
+    const typeA = String(a?.letter_type || '').toUpperCase();
+    const typeB = String(b?.letter_type || '').toUpperCase();
+    
+    // First sort by letter_type (A, B, C, etc.)
+    if (typeA !== typeB) {
+      return typeA.localeCompare(typeB);
+    }
+    
+    // Then sort by level (a, b, c) within the same letter_type
+    const levelA = String(a?.level || '').toLowerCase();
+    const levelB = String(b?.level || '').toLowerCase();
+    return levelA.localeCompare(levelB);
+  });
   
   const filteredLetters = sortedLetters.filter(letter =>
     letter.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -294,7 +320,7 @@ function LettersViewContent() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6 text-sm">
+        <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
           <Link href="/dashboard" className="text-gray-500 hover:text-sky-600 transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -303,8 +329,24 @@ function LettersViewContent() {
           </Link>
           <span className="text-gray-400">/</span>
           <Link href="/dashboard-letters" className="text-gray-500 hover:text-sky-600 transition-colors">Categories</Link>
-          <span className="text-gray-400">/</span>
-          <span className="text-gray-900 font-medium">{currentTopicDisplayName}</span>
+          {currentCategory && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</span>
+            </>
+          )}
+          {currentSubcategory && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-700 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</span>
+            </>
+          )}
+          {currentTopic && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-900 font-semibold">{currentTopicDisplayName}</span>
+            </>
+          )}
         </div>
 
         {/* Header */}
