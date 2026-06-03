@@ -346,10 +346,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-12 text-center">
-          <p className="text-sm text-gray-500">Wordstowellness - write with care.</p>
-        </footer>
       </main>
     </div>
   );
