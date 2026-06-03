@@ -235,10 +235,6 @@ function BrowseLettersContent() {
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="mt-16 text-center">
-          <p className="text-sm text-gray-500">Soften - write with care.</p>
-        </footer>
       </main>
     </div>
   );

@@ -26,7 +26,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={inter.className}>
       <body suppressHydrationWarning>
         <Providers>
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <div className="flex-1">{children}</div>
+            <footer className="border-t border-slate-200 bg-slate-50 py-6 text-center text-sm text-slate-600">
+              💙 Words to Wellness - Helping you communicate with care and confidence
+            </footer>
+          </div>
         </Providers>
       </body>
     </html>

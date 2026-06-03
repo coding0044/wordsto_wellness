@@ -21,6 +21,35 @@ function formatDate(value) {
   return d.toLocaleDateString();
 }
 
+const letterCategoryMap = {
+  A: { title: 'General Confrontation Letters', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700' },
+  B: { title: 'Professional Treatment', borderClass: 'border-orange-500', pillClass: 'bg-orange-50 text-orange-700' },
+  C: { title: 'Follow-up Treatment', borderClass: 'border-violet-500', pillClass: 'bg-violet-50 text-violet-700' },
+  D: { title: 'Apology Letter', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700' },
+  E: { title: 'Defending/Denying', borderClass: 'border-red-500', pillClass: 'bg-red-50 text-red-700' },
+  F: { title: 'Forgiveness', borderClass: 'border-teal-500', pillClass: 'bg-teal-50 text-teal-700' },
+  G: { title: 'Motivation & Support', borderClass: 'border-amber-500', pillClass: 'bg-amber-50 text-amber-700' },
+  H: { title: 'Self Disclosure', borderClass: 'border-pink-500', pillClass: 'bg-pink-50 text-pink-700' },
+  I: { title: 'Congratulations', borderClass: 'border-emerald-500', pillClass: 'bg-emerald-50 text-emerald-700' },
+};
+
+const letterLevelMap = {
+  a: { label: 'Level I', badgeClass: 'bg-emerald-100 text-emerald-700' },
+  b: { label: 'Level II', badgeClass: 'bg-amber-100 text-amber-800' },
+  c: { label: 'Level III', badgeClass: 'bg-red-100 text-red-700' },
+};
+
+const defaultLetterCategory = { title: 'General Letter', borderClass: 'border-gray-300', pillClass: 'bg-gray-100 text-gray-700' };
+const defaultLetterLevel = { label: 'Level', badgeClass: 'bg-gray-100 text-gray-700' };
+
+function getLetterCategory(letterType) {
+  return letterCategoryMap[String(letterType || '').toUpperCase()] || defaultLetterCategory;
+}
+
+function getLetterLevel(level) {
+  return letterLevelMap[String(level || '').toLowerCase()] || defaultLetterLevel;
+}
+
 // Navigation Component
 function Navbar({ user }) {
   const router = useRouter();
@@ -97,30 +126,30 @@ function LockedLetterCard() {
 }
 
 function LetterCard({ letter }) {
+  const category = getLetterCategory(letter.letter_type);
+  const level = getLetterLevel(letter.level);
+
   return (
-    <div className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 transition-all duration-200">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-md">
-          📄
+    <div className={`group block bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 border-l-8 ${category.borderClass}`}>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900 leading-snug md:text-base">
+            {category.title}
+          </p>
         </div>
-        <div className="flex flex-col gap-1 items-end">
-          {letter.full_code && (
-            <span className="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-semibold uppercase tracking-wide">{letter.full_code}</span>
-          )}
-          {letter.letter_type && letter.level && (
-            <span className="text-xs text-gray-500 font-medium">{letter.letter_type} - Level {letter.level}</span>
-          )}
-        </div>
+        <span className={`inline-flex flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${level.badgeClass}`}>
+          {level.label}
+        </span>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors line-clamp-2">{letter.title}</h3>
+
+      <h4 className="text-xl font-semibold text-slate-900 mb-3 line-clamp-2">{letter.title}</h4>
       {letter.content && (
-        <p className="text-sm text-gray-600 mb-4 line-clamp-4 leading-relaxed">{letter.content}</p>
+        <p className="text-sm text-gray-600 mb-5 line-clamp-4 leading-relaxed">{letter.content}</p>
       )}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-500">{formatDate(letter.createdAt)}</span>
-        <button className="flex items-center space-x-1 text-orange-600 font-semibold text-sm hover:translate-x-1 transition-transform">
-          <span>Read More</span>
-          <span>→</span>
+      <div className="flex items-center justify-between text-xs text-gray-500">
+        <span>{formatDate(letter.createdAt)}</span>
+        <button className="font-semibold text-slate-700 hover:text-slate-900 transition">
+          Read More →
         </button>
       </div>
     </div>
@@ -283,9 +312,6 @@ function LettersViewContent() {
           </>
         )}
 
-        <footer className="mt-16 text-center">
-          <p className="text-sm text-gray-500">Wordstowellness - write with care.</p>
-        </footer>
       </main>
     </div>
   );
