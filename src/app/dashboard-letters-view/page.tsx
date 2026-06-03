@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree, useLettersByTopic } from '@/hooks/use-content';
 import Link from 'next/link';
+import { normalizeEntityId } from '@/lib/api-utils';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
 function formatDate(value) {
@@ -186,7 +187,8 @@ function LettersViewContent() {
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
   const subcategories = categories.flatMap((category) => category.subcategories || []);
   const topics = subcategories.flatMap((subcategory) => subcategory.topics || []);
-  const currentTopic = topics.find((t) => String(t._id) === String(topicId));
+const normalizedTopicId = normalizeEntityId(topicId);
+  const currentTopic = topics.find((t) => normalizeEntityId(t) === normalizedTopicId);
   const letters = (currentTopic?.letters && currentTopic.letters.length > 0)
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
@@ -194,10 +196,10 @@ function LettersViewContent() {
   // Find parent category and subcategory for breadcrumb
   let currentCategory = null;
   let currentSubcategory = null;
-  
+
   for (const category of categories) {
     for (const subcategory of category.subcategories || []) {
-      if (subcategory.topics?.some((t) => String(t._id) === String(topicId))) {
+      if (subcategory.topics?.some((t) => normalizeEntityId(t) === normalizedTopicId)) {
         currentCategory = category;
         currentSubcategory = subcategory;
         break;
@@ -255,13 +257,13 @@ function LettersViewContent() {
           {currentCategory && (
             <>
               <span>/</span>
-              <Link href={`/dashboard-subcategories?cat=${currentCategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</Link>
+              <Link href={`/dashboard-subcategories?cat=${normalizeEntityId(currentCategory)}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</Link>
             </>
           )}
           {currentSubcategory && (
             <>
               <span>/</span>
-              <Link href={`/dashboard-topics?sub=${currentSubcategory?._id || ''}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</Link>
+              <Link href={`/dashboard-topics?sub=${normalizeEntityId(currentSubcategory)}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</Link>
             </>
           )}
           {currentTopic && (
@@ -275,7 +277,7 @@ function LettersViewContent() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <Link href={currentCategory ? `/dashboard-subcategories?cat=${currentCategory._id}` : '/dashboard-letters'} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+            <Link href={currentCategory ? `/dashboard-subcategories?cat=${normalizeEntityId(currentCategory)}` : '/dashboard-letters'} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
               </svg>

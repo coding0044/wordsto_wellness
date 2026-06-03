@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
 import { ApiRoutes, Routes } from '@/lib/urls';
+import { normalizeEntityId } from '@/lib/api-utils';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
 function formatDate(value) {
@@ -84,7 +85,7 @@ function Navbar({ user }) {
 function CategoryCard({ category, index }) {
   return (
     <Link
-      href={`/dashboard-subcategories?cat=${category._id}`}
+      href={`/dashboard-subcategories?cat=${normalizeEntityId(category)}`}
       className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-sky-200 transition-all duration-200"
     >
       <div className="flex items-start justify-between mb-4">

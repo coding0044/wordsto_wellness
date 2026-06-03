@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
+import { normalizeEntityId } from '@/lib/api-utils';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
 function formatDate(value) {
@@ -67,7 +68,7 @@ function Navbar({ user }) {
 // Topic Card Component
 function TopicCard({ topic }) {
   return (
-    <Link href={`/dashboard-letters-view?topic=${topic._id}`} className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-violet-200 transition-all duration-200">
+    <Link href={`/dashboard-letters-view?topic=${normalizeEntityId(topic)}`} className="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-violet-200 transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl shadow-md group-hover:scale-105 transition-transform">
           📋
@@ -108,7 +109,8 @@ function TopicsContent() {
 
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
   const subcategories = categories.flatMap((category) => category.subcategories || []);
-  const currentSubcategory = subcategories.find((s) => String(s._id) === String(subcategoryId));
+  const normalizedSubcategoryId = normalizeEntityId(subcategoryId);
+  const currentSubcategory = subcategories.find((s) => normalizeEntityId(s) === normalizedSubcategoryId);
   const topics = currentSubcategory?.topics || [];
   const categoryId = currentSubcategory?.category;
 
