@@ -35,7 +35,7 @@ function Navbar({ user }) {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <nav className={NAVIGATION.header}>
       <Link href="/dashboard" className="flex items-center gap-2">
         <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -53,7 +53,7 @@ function Navbar({ user }) {
 
       <div className="flex items-center gap-3">
         <PlanStatusBadge user={user} />
-        <button onClick={handleLogout} className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors">
+        <button onClick={handleLogout} className={NAVIGATION.navButtonAlt}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
@@ -130,7 +130,7 @@ function SearchByFeelingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
+      <div className={PAGE_LAYOUTS.dashboardLayout}>
       <Navbar user={userData} />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
@@ -143,7 +143,7 @@ function SearchByFeelingsPage() {
               Back to Dashboard
             </Link>
           </div>
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <div className={CARD_LAYOUTS.whiteCard}>
             <div className="flex items-start justify-between gap-6 flex-wrap">
               <div className="max-w-3xl">
                 <p className="text-sky-600 font-medium uppercase tracking-wide mb-2">Search by feelings</p>
@@ -168,7 +168,7 @@ function SearchByFeelingsPage() {
                 placeholder="Search feelings, tone, topic, or content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full rounded-3xl border border-gray-200 bg-white py-4 pl-14 pr-5 text-base text-gray-900 placeholder-gray-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
+                className={SEARCH_LAYOUTS.searchInput}
               />
             </div>
           </div>
@@ -187,7 +187,7 @@ function SearchByFeelingsPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredLetters.map((letter) => (
-              <div key={letter._id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div key={letter._id} className={CARD_LAYOUTS.compactCard}>
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <span className="text-sm font-semibold text-sky-600">{letter.topic?.name || 'Letter'}</span>
                   <span className="text-xs text-gray-500">{letter.category?.name || letter.subcategory?.name || 'Unknown'}</span>

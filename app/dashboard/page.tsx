@@ -5,95 +5,44 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { ApiRoutes, Routes } from '@/lib/urls';
 import SettingsModal from '@/components/settings-modal';
-import PlanStatusBadge from '@/components/plan-status-badge';
-
-// Navigation Component
-function Navbar({ user, onSettingsClick }) {
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    try {
-      await fetch(ApiRoutes.auth.logout, { method: 'POST' });
-      router.push(Routes.auth.login);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      {/* Logo */}
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-        </svg>
-        <span className="text-xl font-light text-gray-700">Wordstowellness</span>
-      </Link>
-
-      {/* Navigation Links */}
-      <div className="hidden md:flex items-center gap-1">
-        <Link href="/dashboard" className="px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-light text-sm hover:bg-sky-200 transition-colors">
-          Dashboard
-        </Link>
-        <Link href="/dashboard-letters" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-light text-sm transition-colors">
-          Browse letters
-        </Link>
-        <Link href="/search-feelings" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-light text-sm transition-colors">
-          Search by feelings
-        </Link>
-        <Link href="/improve-message" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-light text-sm transition-colors">
-          Improve my message
-        </Link>
-        <Link href="/pricing" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-light text-sm transition-colors">
-          Pricing
-        </Link>
-      </div>
-
-      {/* User Actions */}
-      <div className="flex items-center gap-3">
-        <PlanStatusBadge user={user} />
-        <button
-          onClick={onSettingsClick}
-          className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg text-sm font-medium transition-all cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Settings
-        </button>
-      </div>
-    </nav>
-  );
-}
+import DashboardNavbar from '@/components/dashboard-navbar';
+import {
+  DASHBOARD_LAYOUT,
+  DASHBOARD_LOADING,
+  DASHBOARD_WELCOME,
+  DASHBOARD_STATS,
+  DASHBOARD_TOOLS,
+  DASHBOARD_TOOL_CARD,
+  DASHBOARD_BANNER,
+} from '@/styles';
 
 // Stats Card Component
 function StatCard({ label, value, icon }) {
   const icons = {
     plan: (
-      <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className={DASHBOARD_STATS.iconPlan} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
       </svg>
     ),
     uses: (
-      <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className={DASHBOARD_STATS.iconUses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
       </svg>
     ),
     resets: (
-      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className={DASHBOARD_STATS.iconResets} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
       </svg>
     )
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-start justify-between mb-4">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+    <div className={DASHBOARD_STATS.card}>
+      <div className={DASHBOARD_STATS.cardHeader}>
+        <span className={DASHBOARD_STATS.label}>{label}</span>
         {icons[icon]}
       </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      <div className={DASHBOARD_STATS.value}>{value}</div>
     </div>
   );
 }
@@ -249,7 +198,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
-      <Navbar user={user || userData} onSettingsClick={() => setShowSettings(true)} />
+      <DashboardNavbar user={user || userData} onSettingsClick={() => setShowSettings(true)} />
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 

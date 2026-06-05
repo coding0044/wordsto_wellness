@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { PAGE_LAYOUTS, ACTION_BUTTONS } from '@/styles';
 
 export default function GlobalError({ error, reset }: { error: Error | null; reset?: () => void }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center px-6 py-12">
+    <div className={PAGE_LAYOUTS.errorPage}>
       <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-orange-500">Something went wrong</p>
@@ -23,13 +24,13 @@ export default function GlobalError({ error, reset }: { error: Error | null; res
           <button
             type="button"
             onClick={() => reset?.()}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+            className={ACTION_BUTTONS.errorPrimary}
           >
             Try again
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+            className={ACTION_BUTTONS.errorSecondary}
           >
             Go to home
           </Link>

@@ -1,4 +1,5 @@
 "use client";
+import { PAGE_LAYOUTS } from '@/styles';
 
 export default function DashboardShell({ title, subtitle, children }) {
   return (

@@ -139,7 +139,7 @@ function ResetPasswordForm() {
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-lg p-8">
           {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className={STATUS_MESSAGES.errorMessage}>
               {error}
             </div>
           )}
@@ -211,7 +211,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className={ACTION_BUTTONS.verifyButton}
             >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>

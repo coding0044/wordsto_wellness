@@ -6,6 +6,18 @@ import { useContentTree, useLettersByTopic } from '@/hooks/use-content';
 import Link from 'next/link';
 import { normalizeEntityId } from '@/lib/api-utils';
 import PlanStatusBadge from '@/components/plan-status-badge';
+import {
+  LETTERS_VIEW_LAYOUT,
+  LETTERS_VIEW_LOADING,
+  LETTERS_VIEW_NAVBAR,
+  LETTERS_VIEW_BREADCRUMB,
+  LETTERS_VIEW_HEADER,
+  LETTERS_VIEW_SEARCH,
+  LETTERS_VIEW_GRID,
+  LETTERS_VIEW_UPGRADE,
+  LETTERS_VIEW_LETTER_CARD,
+  LETTERS_VIEW_LOCKED_CARD,
+} from '@/styles/letters-view-styles';
 
 function formatDate(value) {
   if (!value) return '';
@@ -65,26 +77,26 @@ function Navbar({ user }) {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+    <nav className={LETTERS_VIEW_NAVBAR.container}>
+      <Link href="/dashboard" className={LETTERS_VIEW_NAVBAR.logoLink}>
+        <svg className={LETTERS_VIEW_NAVBAR.logoSvg} fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
-        <span className="text-xl font-semibold text-gray-800">Wordstowellness</span>
+        <span className={LETTERS_VIEW_NAVBAR.logoSpan}>Wordstowellness</span>
       </Link>
 
-      <div className="hidden md:flex items-center gap-1">
-        <Link href="/dashboard" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Dashboard</Link>
-        <Link href="/dashboard-letters" className="px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-medium text-sm">Browse letters</Link>
-        <Link href="/search-feelings" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Search by feelings</Link>
-        <Link href="/improve-message" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Improve my message</Link>
-        <Link href="/pricing" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Pricing</Link>
+      <div className={LETTERS_VIEW_NAVBAR.navLinks}>
+        <Link href="/dashboard" className={LETTERS_VIEW_NAVBAR.navLink}>Dashboard</Link>
+        <Link href="/dashboard-letters" className={LETTERS_VIEW_NAVBAR.navLinkActive}>Browse letters</Link>
+        <Link href="/search-feelings" className={LETTERS_VIEW_NAVBAR.navLink}>Search by feelings</Link>
+        <Link href="/improve-message" className={LETTERS_VIEW_NAVBAR.navLink}>Improve my message</Link>
+        <Link href="/pricing" className={LETTERS_VIEW_NAVBAR.navLink}>Pricing</Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className={LETTERS_VIEW_NAVBAR.userActions}>
         <PlanStatusBadge user={user} />
-        <button onClick={handleLogout} className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={handleLogout} className={LETTERS_VIEW_NAVBAR.logoutButton}>
+          <svg className={LETTERS_VIEW_NAVBAR.logoutIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
           Log out
@@ -99,24 +111,22 @@ function LockedLetterCard() {
   const router = useRouter();
 
   return (
-    <div className="group block bg-white/70 rounded-2xl p-6 shadow-sm border border-gray-100 opacity-80">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-2xl shadow-md">
-          🔒
-        </div>
-        <span className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold uppercase tracking-wide">Locked</span>
+    <div className={LETTERS_VIEW_LOCKED_CARD.container}>
+      <div className={LETTERS_VIEW_LOCKED_CARD.headerContainer}>
+        <div className={LETTERS_VIEW_LOCKED_CARD.iconContainer}>🔒</div>
+        <span className={LETTERS_VIEW_LOCKED_CARD.badge}>Locked</span>
       </div>
-      <div className="h-7 bg-gray-200 rounded-lg w-3/4 mb-3 animate-pulse"></div>
-      <div className="space-y-2 mb-4">
-        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
-        <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
-        <div className="h-4 bg-gray-200 rounded w-4/6 animate-pulse"></div>
+      <div className={LETTERS_VIEW_LOCKED_CARD.titleSkeleton}></div>
+      <div className={LETTERS_VIEW_LOCKED_CARD.contentSkeleton}>
+        <div className={LETTERS_VIEW_LOCKED_CARD.contentSkeletonLine1}></div>
+        <div className={LETTERS_VIEW_LOCKED_CARD.contentSkeletonLine2}></div>
+        <div className={LETTERS_VIEW_LOCKED_CARD.contentSkeletonLine3}></div>
       </div>
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-400">Premium content</span>
+      <div className={LETTERS_VIEW_LOCKED_CARD.footer}>
+        <span className={LETTERS_VIEW_LOCKED_CARD.premiumLabel}>Premium content</span>
         <button
           onClick={() => router.push('/pricing')}
-          className="flex items-center space-x-1 text-amber-600 font-semibold text-sm hover:translate-x-1 transition-transform"
+          className={LETTERS_VIEW_LOCKED_CARD.upgradeButton}
         >
           <span>Upgrade to unlock</span>
           <span>🔓</span>
@@ -131,25 +141,23 @@ function LetterCard({ letter }) {
   const level = getLetterLevel(letter.level);
 
   return (
-    <div className={`group block bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 border-l-8 ${category.borderClass}`}>
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-4">
+    <div className={LETTERS_VIEW_LETTER_CARD.container(category.borderClass)}>
+      <div className={LETTERS_VIEW_LETTER_CARD.headerContainer}>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 leading-snug md:text-base">
-            {category.title}
-          </p>
+          <p className={LETTERS_VIEW_LETTER_CARD.categoryTitle}>{category.title}</p>
         </div>
-        <span className={`inline-flex flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${level.badgeClass}`}>
+        <span className={LETTERS_VIEW_LETTER_CARD.levelBadge(level.badgeClass)}>
           {level.label}
         </span>
       </div>
 
-      <h4 className="text-xl font-semibold text-slate-900 mb-3 line-clamp-2">{letter.title}</h4>
+      <h4 className={LETTERS_VIEW_LETTER_CARD.title}>{letter.title}</h4>
       {letter.content && (
-        <p className="text-sm text-gray-600 mb-5 line-clamp-4 leading-relaxed">{letter.content}</p>
+        <p className={LETTERS_VIEW_LETTER_CARD.content}>{letter.content}</p>
       )}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className={LETTERS_VIEW_LETTER_CARD.footer}>
         <span>{formatDate(letter.createdAt)}</span>
-        <button className="font-semibold text-slate-700 hover:text-slate-900 transition">
+        <button className={LETTERS_VIEW_LETTER_CARD.readMoreButton}>
           Read More →
         </button>
       </div>
@@ -168,7 +176,6 @@ function LettersViewContent() {
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
   const { data: contentTreeData, isLoading: contentTreeLoading } = useContentTree();
   const { data: lettersByTopic, isLoading: lettersByTopicLoading } = useLettersByTopic(topicId || '');
-
   
   useEffect(() => {
     setIsClient(true);
@@ -187,13 +194,12 @@ function LettersViewContent() {
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
   const subcategories = categories.flatMap((category) => category.subcategories || []);
   const topics = subcategories.flatMap((subcategory) => subcategory.topics || []);
-const normalizedTopicId = normalizeEntityId(topicId);
+  const normalizedTopicId = normalizeEntityId(topicId);
   const currentTopic = topics.find((t) => normalizeEntityId(t) === normalizedTopicId);
   const letters = (currentTopic?.letters && currentTopic.letters.length > 0)
     ? currentTopic.letters
     : (Array.isArray(lettersByTopic) ? lettersByTopic : []);
 
-  // Find parent category and subcategory for breadcrumb
   let currentCategory = null;
   let currentSubcategory = null;
 
@@ -212,12 +218,10 @@ const normalizedTopicId = normalizeEntityId(topicId);
     const typeA = String(a?.letter_type || '').toUpperCase();
     const typeB = String(b?.letter_type || '').toUpperCase();
     
-    // First sort by letter_type (A, B, C, etc.)
     if (typeA !== typeB) {
       return typeA.localeCompare(typeB);
     }
     
-    // Then sort by level (a, b, c) within the same letter_type
     const levelA = String(a?.level || '').toLowerCase();
     const levelB = String(b?.level || '').toLowerCase();
     return levelA.localeCompare(levelB);
@@ -233,10 +237,10 @@ const normalizedTopicId = normalizeEntityId(topicId);
 
   if (!isClient || userLoading || (topicId && lettersByTopicLoading)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
-        <div className="space-y-4">
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 text-center">Loading...</p>
+      <div className={LETTERS_VIEW_LAYOUT.loadingContainer}>
+        <div className={LETTERS_VIEW_LOADING.content}>
+          <div className={LETTERS_VIEW_LOADING.spinner}></div>
+          <p className={LETTERS_VIEW_LOADING.text}>Loading...</p>
         </div>
       </div>
     );
@@ -245,54 +249,52 @@ const normalizedTopicId = normalizeEntityId(topicId);
   if (!userData) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
+    <div className={LETTERS_VIEW_LAYOUT.container}>
       <Navbar user={userData} />
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className={LETTERS_VIEW_LAYOUT.main}>
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
-          <Link href="/dashboard" className="text-gray-500 hover:text-sky-600 transition-colors">Dashboard</Link>
+        <div className={LETTERS_VIEW_BREADCRUMB.container}>
+          <Link href="/dashboard" className={LETTERS_VIEW_BREADCRUMB.link}>Dashboard</Link>
           <span>/</span>
-          <Link href="/dashboard-letters" className="text-gray-500 hover:text-sky-600 transition-colors">Letters</Link>
+          <Link href="/dashboard-letters" className={LETTERS_VIEW_BREADCRUMB.link}>Letters</Link>
           {currentCategory && (
             <>
               <span>/</span>
-              <Link href={`/dashboard-subcategories?cat=${normalizeEntityId(currentCategory)}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentCategory.name}</Link>
+              <Link href={`/dashboard-subcategories?cat=${normalizeEntityId(currentCategory)}`} className={LETTERS_VIEW_BREADCRUMB.categoryLink}>{currentCategory.name}</Link>
             </>
           )}
           {currentSubcategory && (
             <>
               <span>/</span>
-              <Link href={`/dashboard-topics?sub=${normalizeEntityId(currentSubcategory)}`} className="text-gray-500 hover:text-sky-600 transition-colors font-medium">{currentSubcategory.name}</Link>
+              <Link href={`/dashboard-topics?sub=${normalizeEntityId(currentSubcategory)}`} className={LETTERS_VIEW_BREADCRUMB.subcategoryLink}>{currentSubcategory.name}</Link>
             </>
           )}
           {currentTopic && (
             <>
               <span>/</span>
-              <span className="text-gray-900 font-semibold">{currentTopicDisplayName}</span>
+              <span className={LETTERS_VIEW_BREADCRUMB.current}>{currentTopicDisplayName}</span>
             </>
           )}
         </div>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+        <div className={LETTERS_VIEW_HEADER.container}>
+          <div className={LETTERS_VIEW_HEADER.backButton}>
             <Link href={currentCategory ? `/dashboard-subcategories?cat=${normalizeEntityId(currentCategory)}` : '/dashboard-letters'} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={LETTERS_VIEW_HEADER.backIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
               </svg>
               Back
             </Link>
           </div>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-md">
-              📄
-            </div>
+          <div className={LETTERS_VIEW_HEADER.contentContainer}>
+            <div className={LETTERS_VIEW_HEADER.iconContainer}>📄</div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{currentTopicDisplayName}</h1>
-              <p className="text-gray-600">{letters.length} letters available</p>
+              <h1 className={LETTERS_VIEW_HEADER.title}>{currentTopicDisplayName}</h1>
+              <p className={LETTERS_VIEW_HEADER.subtitle}>{letters.length} letters available</p>
               {!hasPaidAccess && (
-                <p className="text-amber-600 text-sm mt-1 flex items-center gap-1">
+                <p className={LETTERS_VIEW_HEADER.upgradeNotice}>
                   <span>🔒</span> Upgrade to Premium or Expert to unlock all letters
                 </p>
               )}
@@ -301,9 +303,9 @@ const normalizedTopicId = normalizeEntityId(topicId);
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-8">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={LETTERS_VIEW_SEARCH.container}>
+          <div className={LETTERS_VIEW_SEARCH.searchIcon}>
+            <svg className={LETTERS_VIEW_SEARCH.searchIconSvg} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
@@ -312,48 +314,47 @@ const normalizedTopicId = normalizeEntityId(topicId);
             placeholder="Search letters..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-12 pr-5 py-3.5 text-base border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 bg-white"
+            className={LETTERS_VIEW_SEARCH.input}
           />
         </div>
 
         {/* Letters Grid */}
         {contentTreeLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="space-y-4">
-              <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>
-              <p className="text-gray-600 text-center">Loading letters...</p>
+          <div className={LETTERS_VIEW_GRID.loadingContainer}>
+            <div className={LETTERS_VIEW_LOADING.content}>
+              <div className={LETTERS_VIEW_LOADING.spinner}></div>
+              <p className={LETTERS_VIEW_LOADING.text}>Loading letters...</p>
             </div>
           </div>
         ) : filteredLetters.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center text-4xl mb-4">📄</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{searchQuery ? 'No letters found' : 'No letters available'}</h3>
-            <p className="text-gray-600">{searchQuery ? 'Try a different search term' : 'Letters will appear here once they\'re added.'}</p>
+          <div className={LETTERS_VIEW_GRID.emptyContainer}>
+            <div className={LETTERS_VIEW_GRID.emptyIcon}>📄</div>
+            <h3 className={LETTERS_VIEW_GRID.emptyTitle}>{searchQuery ? 'No letters found' : 'No letters available'}</h3>
+            <p className={LETTERS_VIEW_GRID.emptyDescription}>{searchQuery ? 'Try a different search term' : 'Letters will appear here once they\'re added.'}</p>
           </div>
         ) : hasPaidAccess ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className={LETTERS_VIEW_GRID.container}>
             {filteredLetters.map((letter) => (
               <LetterCard key={letter._id} letter={letter} />
             ))}
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className={LETTERS_VIEW_GRID.container}>
               {Array.from({ length: Math.max(filteredLetters.length, 3) }).map((_, index) => (
                 <LockedLetterCard key={`locked-${index}`} />
               ))}
             </div>
-            <div className="text-center mt-8">
+            <div className={LETTERS_VIEW_UPGRADE.container}>
               <button
                 onClick={() => router.push('/pricing')}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                className={LETTERS_VIEW_UPGRADE.button}
               >
                 Upgrade to Premium or Expert to unlock all letters →
               </button>
             </div>
           </>
         )}
-
       </main>
     </div>
   );
@@ -362,10 +363,10 @@ const normalizedTopicId = normalizeEntityId(topicId);
 export default function LettersViewPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
-        <div className="space-y-4">
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 text-center">Loading...</p>
+      <div className={LETTERS_VIEW_LAYOUT.loadingContainer}>
+        <div className={LETTERS_VIEW_LOADING.content}>
+          <div className={LETTERS_VIEW_LOADING.spinner}></div>
+          <p className={LETTERS_VIEW_LOADING.text}>Loading...</p>
         </div>
       </div>
     }>

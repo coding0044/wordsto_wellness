@@ -45,7 +45,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center px-4 py-12">
+    <div className={PAGE_LAYOUTS.fullScreenWithPadding}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-6">
@@ -71,9 +71,9 @@ export default function ForgotPassword() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-lg p-8">
+        <div className={CARD_LAYOUTS.whiteCard}>
           {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className={STATUS_MESSAGES.errorMessage}>
               {error}
             </div>
           )}
@@ -88,7 +88,7 @@ export default function ForgotPassword() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all"
+                className={INPUTS.base}
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -97,7 +97,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className={ACTION_BUTTONS.verifyButton}
             >
               {loading ? "Sending..." : "Send Reset Code"}
             </button>

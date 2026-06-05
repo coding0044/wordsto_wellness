@@ -5,6 +5,16 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
 import PlanStatusBadge from '@/components/plan-status-badge';
+import {
+  SEARCH_FEELINGS_LAYOUT,
+  SEARCH_FEELINGS_LOADING,
+  SEARCH_FEELINGS_NAVBAR,
+  SEARCH_FEELINGS_HEADER,
+  SEARCH_FEELINGS_EMPTY,
+  SEARCH_FEELINGS_NO_RESULTS,
+  SEARCH_FEELINGS_RESULTS_GRID,
+  SEARCH_FEELINGS_RESULT_CARD,
+} from '@/styles/search-feelings-styles';
 
 function formatDate(value) {
   if (!value) return '';
@@ -34,26 +44,26 @@ function Navbar({ user }) {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <svg className="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+    <nav className={SEARCH_FEELINGS_NAVBAR.container}>
+      <Link href="/dashboard" className={SEARCH_FEELINGS_NAVBAR.logoLink}>
+        <svg className={SEARCH_FEELINGS_NAVBAR.logoSvg} fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
-        <span className="text-xl font-light text-gray-700">Wordstowellness</span>
+        <span className={SEARCH_FEELINGS_NAVBAR.logoSpan}>Wordstowellness</span>
       </Link>
 
-      <div className="hidden md:flex items-center gap-1">
-        <Link href="/dashboard" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Dashboard</Link>
-        <Link href="/dashboard-letters" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Browse letters</Link>
-        <Link href="/search-feelings" className="px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-medium text-sm">Search by feelings</Link>
-        <Link href="/improve-message" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Improve my message</Link>
-        <Link href="/pricing" className="px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors">Pricing</Link>
+      <div className={SEARCH_FEELINGS_NAVBAR.navLinks}>
+        <Link href="/dashboard" className={SEARCH_FEELINGS_NAVBAR.navLink}>Dashboard</Link>
+        <Link href="/dashboard-letters" className={SEARCH_FEELINGS_NAVBAR.navLink}>Browse letters</Link>
+        <Link href="/search-feelings" className={SEARCH_FEELINGS_NAVBAR.navLinkActive}>Search by feelings</Link>
+        <Link href="/improve-message" className={SEARCH_FEELINGS_NAVBAR.navLink}>Improve my message</Link>
+        <Link href="/pricing" className={SEARCH_FEELINGS_NAVBAR.navLink}>Pricing</Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className={SEARCH_FEELINGS_NAVBAR.userActions}>
         <PlanStatusBadge user={user} />
-        <button onClick={handleLogout} className="flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={handleLogout} className={SEARCH_FEELINGS_NAVBAR.logoutButton}>
+          <svg className={SEARCH_FEELINGS_NAVBAR.logoutIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
           Log out
@@ -115,10 +125,10 @@ function SearchByFeelingsPage() {
 
   if (!isClient || userLoading || contentTreeLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
-        <div className="space-y-4">
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 text-center">Loading search data...</p>
+      <div className={SEARCH_FEELINGS_LAYOUT.loadingContainer}>
+        <div className={SEARCH_FEELINGS_LOADING.content}>
+          <div className={SEARCH_FEELINGS_LOADING.spinner}></div>
+          <p className={SEARCH_FEELINGS_LOADING.text}>Loading search data...</p>
         </div>
       </div>
     );
@@ -129,36 +139,37 @@ function SearchByFeelingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50">
+    <div className={SEARCH_FEELINGS_LAYOUT.container}>
       <Navbar user={userData} />
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/dashboard" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <main className={SEARCH_FEELINGS_LAYOUT.main}>
+        <div className={SEARCH_FEELINGS_HEADER.container}>
+          <div className={SEARCH_FEELINGS_HEADER.backButton}>
+            <Link href="/dashboard" className={SEARCH_FEELINGS_HEADER.backButtonInner}>
+              <svg className={SEARCH_FEELINGS_HEADER.backIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Dashboard
             </Link>
           </div>
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <div className="flex items-start justify-between gap-6 flex-wrap">
-              <div className="max-w-3xl">
-                <p className="text-sky-600 font-medium uppercase tracking-wide mb-2">Search by feelings</p>
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">Find letters that match your mood.</h1>
-                <p className="text-gray-600 leading-relaxed">
+          
+          <div className={SEARCH_FEELINGS_HEADER.heroContainer}>
+            <div className={SEARCH_FEELINGS_HEADER.heroContent}>
+              <div className={SEARCH_FEELINGS_HEADER.heroText}>
+                <p className={SEARCH_FEELINGS_HEADER.heroBadge}>Search by feelings</p>
+                <h1 className={SEARCH_FEELINGS_HEADER.heroTitle}>Find letters that match your mood.</h1>
+                <p className={SEARCH_FEELINGS_HEADER.heroDescription}>
                   Enter how you feel or what you want to say, and we&apos;ll surface the most relevant letters from the library.
                 </p>
               </div>
-              <div className="rounded-3xl bg-sky-50 p-4 text-sky-700 text-sm font-medium">
+              <div className={SEARCH_FEELINGS_HEADER.statsBadge}>
                 {letters.length} letters searchable across {categories.length} categories
               </div>
             </div>
 
-            <div className="mt-8 relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={SEARCH_FEELINGS_HEADER.searchContainer}>
+              <div className={SEARCH_FEELINGS_HEADER.searchIcon}>
+                <svg className={SEARCH_FEELINGS_HEADER.searchIconSvg} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -167,33 +178,33 @@ function SearchByFeelingsPage() {
                 placeholder="Search feelings, tone, topic, or content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full rounded-3xl border border-gray-200 bg-white py-4 pl-14 pr-5 text-base text-gray-900 placeholder-gray-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
+                className={SEARCH_FEELINGS_HEADER.searchInput}
               />
             </div>
           </div>
         </div>
 
         {!normalizedInput ? (
-          <div className="rounded-3xl bg-white p-10 shadow-sm border border-gray-100 text-center">
-            <p className="text-lg font-semibold text-gray-900 mb-2">Start with a feeling or keyword</p>
-            <p className="text-gray-600">Try words like &quot;hopeful&quot;, &quot;healing&quot;, &quot;confused&quot;, or &quot;grief&quot; to find letters that resonate.</p>
+          <div className={SEARCH_FEELINGS_EMPTY.container}>
+            <p className={SEARCH_FEELINGS_EMPTY.title}>Start with a feeling or keyword</p>
+            <p className={SEARCH_FEELINGS_EMPTY.description}>Try words like &quot;hopeful&quot;, &quot;healing&quot;, &quot;confused&quot;, or &quot;grief&quot; to find letters that resonate.</p>
           </div>
         ) : filteredLetters.length === 0 ? (
-          <div className="rounded-3xl bg-white p-10 shadow-sm border border-gray-100 text-center">
-            <p className="text-xl font-semibold text-gray-900 mb-3">No matches found</p>
-            <p className="text-gray-600">Try a different feeling, topic, or emotion.</p>
+          <div className={SEARCH_FEELINGS_NO_RESULTS.container}>
+            <p className={SEARCH_FEELINGS_NO_RESULTS.title}>No matches found</p>
+            <p className={SEARCH_FEELINGS_NO_RESULTS.description}>Try a different feeling, topic, or emotion.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className={SEARCH_FEELINGS_RESULTS_GRID.container}>
             {filteredLetters.map((letter) => (
-              <div key={letter._id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <span className="text-sm font-semibold text-sky-600">{letter.topic?.name || 'Letter'}</span>
-                  <span className="text-xs text-gray-500">{letter.category?.name || letter.subcategory?.name || 'Unknown'}</span>
+              <div key={letter._id} className={SEARCH_FEELINGS_RESULT_CARD.container}>
+                <div className={SEARCH_FEELINGS_RESULT_CARD.header}>
+                  <span className={SEARCH_FEELINGS_RESULT_CARD.topicName}>{letter.topic?.name || 'Letter'}</span>
+                  <span className={SEARCH_FEELINGS_RESULT_CARD.categoryName}>{letter.category?.name || letter.subcategory?.name || 'Unknown'}</span>
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">{letter.title || 'Untitled letter'}</h2>
-                <p className="text-sm text-gray-600 mb-5 line-clamp-4">{letter.content || 'No description available.'}</p>
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <h2 className={SEARCH_FEELINGS_RESULT_CARD.title}>{letter.title || 'Untitled letter'}</h2>
+                <p className={SEARCH_FEELINGS_RESULT_CARD.content}>{letter.content || 'No description available.'}</p>
+                <div className={SEARCH_FEELINGS_RESULT_CARD.footer}>
                   <span>{letter.subcategory?.name || 'Unknown topic'}</span>
                   <span>{formatDate(letter.createdAt)}</span>
                 </div>
@@ -209,10 +220,10 @@ function SearchByFeelingsPage() {
 export default function SearchByFeelingsPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
-        <div className="space-y-4">
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 text-center">Loading search page...</p>
+      <div className={SEARCH_FEELINGS_LAYOUT.loadingContainer}>
+        <div className={SEARCH_FEELINGS_LOADING.content}>
+          <div className={SEARCH_FEELINGS_LOADING.spinner}></div>
+          <p className={SEARCH_FEELINGS_LOADING.text}>Loading search page...</p>
         </div>
       </div>
     }>

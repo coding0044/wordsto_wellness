@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { Badge } from '@/components/ui';
+import { getPlanColorClasses } from '@/styles';
 
 export default function PlanStatusBadge({ user }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -29,24 +31,15 @@ export default function PlanStatusBadge({ user }) {
     null;
 
   const label = planName.toLowerCase() === 'free' ? 'Free plan' : planName;
-  
-  // Softer, more elegant color coding
-  let bgColor = 'bg-gradient-to-br from-sky-50 to-cyan-50';
-  let textColor = 'text-sky-700';
-  let badgeBg = 'bg-gradient-to-r from-sky-100 to-cyan-100';
-  let borderColor = 'border-sky-200';
-  
-  if (planName.toLowerCase().includes('premium')) {
-    bgColor = 'bg-gradient-to-br from-amber-50 to-orange-50';
-    textColor = 'text-amber-700';
-    badgeBg = 'bg-gradient-to-r from-amber-100 to-orange-100';
-    borderColor = 'border-amber-200';
-  } else if (planName.toLowerCase().includes('expert') || planName.toLowerCase().includes('pro')) {
-    bgColor = 'bg-gradient-to-br from-purple-50 to-pink-50';
-    textColor = 'text-purple-700';
-    badgeBg = 'bg-gradient-to-r from-purple-100 to-pink-100';
-    borderColor = 'border-purple-200';
-  }
+  const colors = getPlanColorClasses(planName);
+
+  // Map gradient colors for details panel
+  const bgGradientMap = {
+    sky: 'from-sky-50 to-cyan-50',
+    amber: 'from-amber-50 to-orange-50',
+    purple: 'from-purple-50 to-pink-50',
+  };
+  const bgGradient = bgGradientMap[planName.toLowerCase().includes('premium') ? 'amber' : planName.toLowerCase().includes('pro') ? 'purple' : 'sky'];
 
   const statusColor = 
     planStatus === 'active' ? 'text-emerald-600' :
@@ -64,7 +57,7 @@ export default function PlanStatusBadge({ user }) {
     <div className="relative">
       <button
         onClick={() => setShowDetails(!showDetails)}
-        className={`px-4 py-2 ${badgeBg} ${textColor} rounded-full text-sm font-light hover:shadow-md transition-all duration-200 cursor-pointer border ${borderColor} flex items-center gap-2`}
+        className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-light hover:shadow-md transition-all duration-200 cursor-pointer border ${colors.bg} ${colors.text} ${colors.border}`}
       >
         <span>{label}</span>
         <span className={`inline-flex items-center justify-center w-2 h-2 rounded-full ${
@@ -75,11 +68,11 @@ export default function PlanStatusBadge({ user }) {
       </button>
 
       {showDetails && (
-        <div className={`absolute right-0 mt-2 w-80 ${bgColor} border ${borderColor} rounded-2xl shadow-xl p-6 z-50 backdrop-blur-sm`}>
+        <div className={`absolute right-0 mt-2 w-80 bg-gradient-to-br ${bgGradient} border ${colors.border} rounded-2xl shadow-xl p-6 z-50 backdrop-blur-sm`}>
           <div className="space-y-4">
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-widest font-light mb-1">Current Plan</p>
-              <p className={`text-2xl font-light ${textColor}`}>{label}</p>
+              <p className={`text-2xl font-light ${colors.text}`}>{label}</p>
             </div>
             
             <div className="flex items-center gap-2">
@@ -107,7 +100,7 @@ export default function PlanStatusBadge({ user }) {
             <div className="pt-4 border-t border-gray-200 border-opacity-50">
               <a 
                 href="/pricing" 
-                className={`block w-full text-center px-4 py-2.5 ${badgeBg} ${textColor} rounded-lg font-light text-sm hover:opacity-80 transition-opacity border ${borderColor}`}
+                className={`block w-full text-center px-4 py-2.5 ${colors.bg} ${colors.text} rounded-lg font-light text-sm hover:opacity-80 transition-opacity border ${colors.border}`}
               >
                 View All Plans
               </a>

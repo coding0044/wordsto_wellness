@@ -4,6 +4,8 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ApiRoutes, Routes } from '@/lib/urls';
+import { Input, Button, Alert } from '@/components/ui';
+import { GRADIENTS, TEXT } from '@/styles';
 
 
 
@@ -146,130 +148,101 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center">
-            <svg className="w-7 h-7 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
-          </div>
-        </div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-            Sign In
-          </h1>
-
-          <p className="text-sm text-gray-500">
-            Welcome back to Wordstowellness
-          </p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-lg p-8">
-
-          {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+    <div className={GRADIENTS.pageBg}>
+      <div className="flex items-center justify-center px-4 py-12 min-h-screen">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
             </div>
-          )}
+          </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className={`${TEXT.headingMedium} mb-2`}>Sign In</h1>
+            <p className={TEXT.subtitle}>Welcome back to Wordstowellness</p>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
+          {/* Form Card */}
+          <div className="bg-white rounded-3xl shadow-lg p-8">
+            {error && <Alert message={error} type="error" className="mb-6" />}
 
-              <input
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <Input
                 type="email"
-                required
+                label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                required
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-
-              <div className="relative">
-                <input
+              <div>
+                <Input
                   type={showPassword ? 'text' : 'password'}
-                  required
+                  label="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                  required
                 />
+                <div className="flex items-center justify-between mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-xs text-sky-600 hover:text-sky-700"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                  <Link
+                    href={Routes.auth.forgotPassword}
+                    className="text-xs text-sky-600 hover:text-sky-700"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
+              <Button type="submit" disabled={loading} fullWidth>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+
+            {/* Divider */}
+            <div className="mt-6 relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or sign in with</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Link
-                href={Routes.auth.forgotPassword}
-                className="text-sm text-sky-600 hover:text-sky-700"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl"
+            {/* Google Login */}
+            <Button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              variant="secondary"
+              fullWidth
+              className="mt-4"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+              {googleLoading ? 'Connecting...' : 'Continue with Google'}
+            </Button>
 
-          </form>
-
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                Or sign in with
-              </span>
+            {/* Footer */}
+            <div className="mt-6 text-center">
+              <p className={`${TEXT.subtitle} mb-0`}>
+                Don't have an account?{' '}
+                <Link href={Routes.auth.signup} className="text-sky-600 font-medium">
+                  Sign up
+                </Link>
+              </p>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-            className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl"
-          >
-            {googleLoading ? 'Connecting...' : 'Continue with Google'}
-          </button>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-
-              <Link
-                href={Routes.auth.signup}
-                className="text-sky-600 font-medium"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
-
         </div>
       </div>
     </div>

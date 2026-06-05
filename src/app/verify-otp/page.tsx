@@ -2,6 +2,15 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  VERIFY_OTP_LAYOUT,
+  VERIFY_OTP_LOGO,
+  VERIFY_OTP_TITLE,
+  VERIFY_OTP_CARD,
+  VERIFY_OTP_FORM,
+  VERIFY_OTP_RESEND,
+  VERIFY_OTP_FOOTER,
+} from '@/styles/verify-otp-styles';
 
 function VerifyOTPForm() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -133,39 +142,39 @@ function VerifyOTPForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className={VERIFY_OTP_LAYOUT.container}>
+      <div className={VERIFY_OTP_LAYOUT.wrapper}>
         {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center">
-            <svg className="w-7 h-7 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+        <div className={VERIFY_OTP_LOGO.container}>
+          <div className={VERIFY_OTP_LOGO.iconWrapper}>
+            <svg className={VERIFY_OTP_LOGO.icon} fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Verify OTP</h1>
-          <p className="text-sm text-gray-500">Enter the 6-digit code sent to your email</p>
+        <div className={VERIFY_OTP_TITLE.container}>
+          <h1 className={VERIFY_OTP_TITLE.title}>Verify OTP</h1>
+          <p className={VERIFY_OTP_TITLE.subtitle}>Enter the 6-digit code sent to your email</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-lg p-8">
+        <div className={VERIFY_OTP_CARD.container}>
           {message && (
-            <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div className={VERIFY_OTP_CARD.success}>
               {message}
             </div>
           )}
           {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className={VERIFY_OTP_CARD.error}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className={VERIFY_OTP_FORM.container}>
             {/* OTP Input Fields */}
-            <div className="flex justify-center gap-2">
+            <div className={VERIFY_OTP_FORM.otpContainer}>
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -175,7 +184,7 @@ function VerifyOTPForm() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="h-12 w-12 text-center text-xl font-bold border border-gray-200 rounded-xl focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100 transition-all"
+                  className={VERIFY_OTP_FORM.otpInput}
                   disabled={loading}
                   autoFocus={index === 0}
                 />
@@ -183,15 +192,15 @@ function VerifyOTPForm() {
             </div>
 
             {/* Timer */}
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
+            <div className={VERIFY_OTP_FORM.timerContainer}>
+              <p className={VERIFY_OTP_FORM.timerText}>
                 {timeLeft > 0 ? (
                   <>
                     OTP expires in:{' '}
-                    <span className="font-bold text-sky-600">{formatTime(timeLeft)}</span>
+                    <span className={VERIFY_OTP_FORM.timerBold}>{formatTime(timeLeft)}</span>
                   </>
                 ) : (
-                  <span className="text-red-600">OTP has expired</span>
+                  <span className={VERIFY_OTP_FORM.timerExpired}>OTP has expired</span>
                 )}
               </p>
             </div>
@@ -200,33 +209,33 @@ function VerifyOTPForm() {
             <button
               type="submit"
               disabled={loading || timeLeft === 0}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className={VERIFY_OTP_FORM.submitButton}
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
           </form>
 
           {/* Resend OTP */}
-          <div className="mt-6 text-center">
+          <div className={VERIFY_OTP_RESEND.container}>
             {canResend ? (
               <button
                 type="button"
                 onClick={handleResendOTP}
                 disabled={loading}
-                className="text-sky-600 hover:text-sky-700 font-medium text-sm"
+                className={VERIFY_OTP_RESEND.button}
               >
                 Resend OTP
               </button>
             ) : (
-              <p className="text-sm text-gray-500">
+              <p className={VERIFY_OTP_RESEND.waitingText}>
                 Didn't receive code? Wait {formatTime(timeLeft)} to resend
               </p>
             )}
           </div>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-sky-600 hover:text-sky-700 font-medium">
+          <div className={VERIFY_OTP_FOOTER.container}>
+            <Link href="/login" className={VERIFY_OTP_FOOTER.link}>
               Back to Login
             </Link>
           </div>
@@ -240,10 +249,10 @@ export default function VerifyOTPPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+        <div className={VERIFY_OTP_LAYOUT.loadingContainer}>
+          <div className={VERIFY_OTP_LAYOUT.loadingContent}>
+            <div className={VERIFY_OTP_LAYOUT.loadingSpinner}></div>
+            <p className={VERIFY_OTP_LAYOUT.loadingText}>Loading...</p>
           </div>
         </div>
       }

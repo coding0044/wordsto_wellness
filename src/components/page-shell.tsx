@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { CARD_LAYOUTS } from '@/styles';
 
 export default function PageShell({
   title,
@@ -13,7 +14,7 @@ export default function PageShell({
   return (
     <div className="min-h-screen bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
       <div className={`mx-auto ${maxWidth}`}>
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/95 shadow-2xl shadow-slate-950/10 backdrop-blur-xl">
+        <div className={CARD_LAYOUTS.shellCard}>
           <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-8 py-10 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-sky-400">wordstowellness</p>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">{title}</h1>

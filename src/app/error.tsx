@@ -1,6 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  GLOBAL_ERROR_LAYOUT,
+  GLOBAL_ERROR_CONTENT,
+  GLOBAL_ERROR_DETAILS,
+  GLOBAL_ERROR_ACTIONS,
+} from '@/styles/global-error-styles';
 
 type GlobalErrorProps = {
   error: Error & { digest?: string };
@@ -12,44 +18,44 @@ export default function GlobalError({
   reset,
 }: GlobalErrorProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
-        <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-orange-500">
+    <div className={GLOBAL_ERROR_LAYOUT.container}>
+      <div className={GLOBAL_ERROR_LAYOUT.wrapper}>
+        <div className={GLOBAL_ERROR_CONTENT.container}>
+          <p className={GLOBAL_ERROR_CONTENT.badge}>
             Something went wrong
           </p>
 
-          <h1 className="mt-4 text-3xl font-bold text-slate-900">
+          <h1 className={GLOBAL_ERROR_CONTENT.title}>
             An unexpected error occurred.
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+          <p className={GLOBAL_ERROR_CONTENT.description}>
             Please try reloading the page, or return to the homepage.
           </p>
         </div>
 
-        <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-sm text-slate-700">
-          <div className="font-semibold text-slate-900">
+        <div className={GLOBAL_ERROR_DETAILS.container}>
+          <div className={GLOBAL_ERROR_DETAILS.title}>
             Error details
           </div>
 
-          <pre className="mt-2 whitespace-pre-wrap break-words">
+          <pre className={GLOBAL_ERROR_DETAILS.message}>
             {error?.message ?? 'No message available.'}
           </pre>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className={GLOBAL_ERROR_ACTIONS.container}>
           <button
             type="button"
             onClick={() => reset()}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+            className={GLOBAL_ERROR_ACTIONS.resetButton}
           >
             Try again
           </button>
 
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+            className={GLOBAL_ERROR_ACTIONS.homeLink}
           >
             Go to home
           </Link>

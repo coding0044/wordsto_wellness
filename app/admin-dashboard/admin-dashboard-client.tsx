@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ADMIN_PAGES, ADMIN_ACCENT_COLORS, getAccentColor } from '@/lib/admin-dashboard-config';
 import { Routes, ApiRoutes } from '@/lib/urls';
+import { ADMIN_PAGINATION } from '@/styles';
 
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
@@ -79,37 +80,16 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
   if (totalPages <= 1) return null;
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'space-between',
-      padding: '16px 20px',
-      borderTop: '1px solid #e2e8f0',
-      background: '#fff',
-      flexWrap: 'wrap',
-      gap: '12px'
-    }}>
-      <div style={{ fontSize: 13, color: '#64748b' }}>
+    <div style={ADMIN_PAGINATION.container}>
+      <div style={ADMIN_PAGINATION.info}>
         Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
       </div>
       
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      <div style={ADMIN_PAGINATION.buttonGroup}>
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          style={{
-            padding: '8px 12px',          
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            background: currentPage === 1 ? '#f1f5f9' : '#fff',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            color: currentPage === 1 ? '#94a3b8' : '#475569',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 13,
-            transition: 'all 0.15s'
-          }}
+          style={ADMIN_PAGINATION.buttonBase(currentPage === 1)}
         >
           <ChevronsLeft size={14} /> First
         </button>
@@ -117,40 +97,19 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            background: currentPage === 1 ? '#f1f5f9' : '#fff',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            color: currentPage === 1 ? '#94a3b8' : '#475569',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 13
-          }}
+          style={ADMIN_PAGINATION.buttonBase(currentPage === 1)}
         >
           <ChevronLeft size={14} /> Prev
         </button>
         
         {getPageNumbers().map((page, index) => (
           page === '...' ? (
-            <span key={`dots-${index}`} style={{ padding: '8px 4px', color: '#94a3b8' }}>...</span>
+            <span key={`dots-${index}`} style={ADMIN_PAGINATION.ellipsis}>...</span>
           ) : (
             <button
               key={page}
               onClick={() => onPageChange(Number(page))}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 8,
-                border: currentPage === page ? 'none' : '1px solid #e2e8f0',
-                background: currentPage === page ? `linear-gradient(135deg, ${accentColor.from}, ${accentColor.to})` : '#fff',
-                color: currentPage === page ? '#fff' : '#475569',
-                cursor: 'pointer',
-                fontWeight: currentPage === page ? 600 : 400,
-                fontSize: 13,
-                transition: 'all 0.15s'
-              }}
+              style={ADMIN_PAGINATION.pageButton(currentPage === page, accentColor.from, accentColor.to)}
             >
               {page}
             </button>
@@ -160,37 +119,15 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            background: currentPage === totalPages ? '#f1f5f9' : '#fff',
-            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-            color: currentPage === totalPages ? '#94a3b8' : '#475569',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 13
-          }}
+          style={ADMIN_PAGINATION.buttonBase(currentPage === totalPages)}
         >
-          Next <ChevronRight size={14} />
+          <ChevronRight size={14} /> Next
         </button>
         
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            background: currentPage === totalPages ? '#f1f5f9' : '#fff',
-            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-            color: currentPage === totalPages ? '#94a3b8' : '#475569',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 13
-          }}
+          style={ADMIN_PAGINATION.buttonBase(currentPage === totalPages)}
         >
           Last <ChevronsRight size={14} />
         </button>

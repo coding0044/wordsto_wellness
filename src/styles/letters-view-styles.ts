@@ -1,0 +1,94 @@
+// styles/letters-view-styles.js
+
+export const LETTERS_VIEW_LAYOUT = {
+  container: "min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50",
+  loadingContainer: "min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center",
+  main: "max-w-6xl mx-auto px-6 py-8",
+};
+
+export const LETTERS_VIEW_LOADING = {
+  content: "space-y-4",
+  spinner: "w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto",
+  text: "text-gray-600 text-center",
+};
+
+export const LETTERS_VIEW_NAVBAR = {
+  container: "flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-50",
+  logoLink: "flex items-center gap-2",
+  logoSvg: "w-6 h-6 text-sky-500",
+  logoSpan: "text-xl font-semibold text-gray-800",
+  navLinks: "hidden md:flex items-center gap-1",
+  navLink: "px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors",
+  navLinkActive: "px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-medium text-sm",
+  userActions: "flex items-center gap-3",
+  logoutButton: "flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors",
+  logoutIcon: "w-4 h-4",
+};
+
+export const LETTERS_VIEW_BREADCRUMB = {
+  container: "flex items-center gap-2 mb-6 text-sm flex-wrap",
+  link: "text-gray-500 hover:text-sky-600 transition-colors",
+  separator: "",
+  current: "text-gray-900 font-semibold",
+  categoryLink: "text-gray-500 hover:text-sky-600 transition-colors font-medium",
+  subcategoryLink: "text-gray-500 hover:text-sky-600 transition-colors font-medium",
+};
+
+export const LETTERS_VIEW_HEADER = {
+  container: "mb-8",
+  backButton: "flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors mb-4",
+  backIcon: "w-5 h-5",
+  contentContainer: "flex items-center gap-4 mb-2",
+  iconContainer: "w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-md",
+  title: "text-3xl font-bold text-gray-900",
+  subtitle: "text-gray-600",
+  upgradeNotice: "text-amber-600 text-sm mt-1 flex items-center gap-1",
+  upgradeIcon: "",
+};
+
+export const LETTERS_VIEW_SEARCH = {
+  container: "relative mb-8",
+  searchIcon: "absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none",
+  searchIconSvg: "w-5 h-5 text-gray-400",
+  input: "block w-full pl-12 pr-5 py-3.5 text-base border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 bg-white",
+};
+
+export const LETTERS_VIEW_GRID = {
+  container: "grid gap-6 md:grid-cols-2 lg:grid-cols-3",
+  loadingContainer: "flex items-center justify-center py-20",
+  emptyContainer: "text-center py-16",
+  emptyIcon: "w-24 h-24 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center text-4xl mb-4",
+  emptyTitle: "text-xl font-semibold text-gray-900 mb-2",
+  emptyDescription: "text-gray-600",
+};
+
+export const LETTERS_VIEW_UPGRADE = {
+  container: "text-center mt-8",
+  button: "px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg",
+};
+
+export const LETTERS_VIEW_LETTER_CARD = {
+  container: (borderClass) => `group block bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 border-l-8 ${borderClass}`,
+  headerContainer: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-4",
+  categoryTitle: "text-sm font-semibold text-slate-900 leading-snug md:text-base",
+  levelBadge: (badgeClass) => `inline-flex flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${badgeClass}`,
+  title: "text-xl font-semibold text-slate-900 mb-3 line-clamp-2",
+  content: "text-sm text-gray-600 mb-5 line-clamp-4 leading-relaxed",
+  footer: "flex items-center justify-between text-xs text-gray-500",
+  readMoreButton: "font-semibold text-slate-700 hover:text-slate-900 transition",
+};
+
+export const LETTERS_VIEW_LOCKED_CARD = {
+  container: "group block bg-white/70 rounded-2xl p-6 shadow-sm border border-gray-100 opacity-80",
+  headerContainer: "flex items-start justify-between mb-4",
+  iconContainer: "w-14 h-14 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-2xl shadow-md",
+  badge: "px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold uppercase tracking-wide",
+  titleSkeleton: "h-7 bg-gray-200 rounded-lg w-3/4 mb-3 animate-pulse",
+  contentSkeleton: "space-y-2 mb-4",
+  contentSkeletonLine1: "h-4 bg-gray-200 rounded w-full animate-pulse",
+  contentSkeletonLine2: "h-4 bg-gray-200 rounded w-5/6 animate-pulse",
+  contentSkeletonLine3: "h-4 bg-gray-200 rounded w-4/6 animate-pulse",
+  footer: "flex items-center justify-between pt-4 border-t border-gray-100",
+  premiumLabel: "text-xs text-gray-400",
+  upgradeButton: "flex items-center space-x-1 text-amber-600 font-semibold text-sm hover:translate-x-1 transition-transform",
+};

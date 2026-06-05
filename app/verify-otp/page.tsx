@@ -134,7 +134,7 @@ function VerifyOTPForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 flex items-center justify-center px-4 py-12">
+    <div className={PAGE_LAYOUTS.fullScreenWithPadding}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-6">
@@ -152,14 +152,14 @@ function VerifyOTPForm() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-lg p-8">
+        <div className={CARD_LAYOUTS.whiteCard}>
           {message && (
-            <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div className={STATUS_MESSAGES.successMessage}>
               {message}
             </div>
           )}
           {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className={STATUS_MESSAGES.errorMessage}>
               {error}
             </div>
           )}
@@ -176,7 +176,7 @@ function VerifyOTPForm() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="h-12 w-12 text-center text-xl font-bold border border-gray-200 rounded-xl focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100 transition-all"
+                  className={OTP_INPUTS.otpField}
                   disabled={loading}
                   autoFocus={index === 0}
                 />
@@ -201,7 +201,7 @@ function VerifyOTPForm() {
             <button
               type="submit"
               disabled={loading || timeLeft === 0}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className={ACTION_BUTTONS.verifyButton}
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
