@@ -59,6 +59,11 @@ import {
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
 
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Format date to readable string
+ */
 function formatDate(value) {
   if (!value) return "N/A";
   let d = new Date(value);
@@ -74,33 +79,395 @@ function formatDate(value) {
   });
 }
 
-// Pagination Component
-function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      }
-    }
-    return pages;
+/**
+ * Get mutation map for content types
+ */
+function getMutationMap(deleteCategory, deleteSubcategory, deleteTopic, deleteLetter) {
+  return {
+    category: deleteCategory,
+    subcategory: deleteSubcategory,
+    topic: deleteTopic,
+    letter: deleteLetter,
   };
+}
+
+/**
+ * Get plural key for pagination state
+ */
+function getPaginationKey(type) {
+  const keyMap = {
+    category: "categories",
+    subcategory: "subcategories",
+    topic: "topics",
+    letter: "letters",
+    user: "users",
+  };
+  return keyMap[type] || type + "s";
+}
+
+/**
+ * Get tab name for data fetching
+ */
+function getDataByTab(tab, categories, subcategories, topics, letters, users) {
+  const dataMap = {
+    categories: categories,
+    subcategories: subcategories,
+    topics: topics,
+    letters: letters,
+    users: users,
+  };
+  return dataMap[tab] || [];
+}
+
+/**
+ * Get empty message for table
+ */
+function getEmptyMessage(type) {
+  const messages = {
+    users: "No users found",
+    categories: "No categories yet. Add a category to see it here.",
+    subcategories: "No subcategories yet",
+    topics: "No topics yet",
+    letters: "No letters yet",
+  };
+  return messages[type] || "No items found";
+}
+
+/**
+ * Get icon for table
+ */
+function getTableIcon(type) {
+  const iconMap = {
+    users: Users,
+    categories: Layers,
+    subcategories: FolderTree,
+    topics: BookOpen,
+    letters: FileText,
+  };
+  return iconMap[type] || FileText;
+}
+
+/**
+ * Get table columns
+ */
+function getTableColumns(type) {
+  const columnsMap = {
+    users: ["User", "Email", "Role", "Joined", "Actions"],
+    categories: ["Category", "Description", "Created", "Actions"],
+    subcategories: ["Subcategory", "Description", "Created", "Actions"],
+    topics: ["Topic", "Description", "Created", "Actions"],
+    letters: ["Letter", "Type", "Content Preview", "Created", "Actions"],
+  };
+  return columnsMap[type] || ["Name", "Description", "Created", "Actions"];
+}
+
+/**
+ * Check if user is admin
+ */
+function isAdminUser(user) {
+  return user && user.role === "admin";
+}
+
+/**
+ * Get user initials for avatar
+ */
+function getUserInitials(name) {
+  return name?.charAt(0).toUpperCase() || "U";
+}
+
+/**
+ * Get gradient colors for avatar
+ */
+function getAvatarGradient(type) {
+  const gradientMap = {
+    user: "from-indigo-500 to-purple-500",
+    category: "from-blue-500 to-cyan-500",
+    subcategory: "from-emerald-500 to-teal-500",
+    topic: "from-amber-500 to-orange-500",
+    letter: "from-rose-500 to-pink-500",
+  };
+  return gradientMap[type] || "from-gray-500 to-gray-600";
+}
+
+/**
+ * Get badge styles for role
+ */
+function getRoleBadgeStyles(role) {
+  return {
+    bg: role === "admin" ? "purple-50" : "blue-50",
+    text: role === "admin" ? "purple-700" : "blue-700",
+  };
+}
+
+/**
+ * Filter items based on search query
+ */
+function filterBySearchQuery(items, tab, searchQuery) {
+  if (!searchQuery) return items;
+  
+  const searchLower = searchQuery.toLowerCase();
+  
+  return items.filter((item) => {
+    if (tab === "users") {
+      return item.name?.toLowerCase().includes(searchLower) || 
+             item.email?.toLowerCase().includes(searchLower);
+    }
+    if (tab === "letters") {
+      return item.title?.toLowerCase().includes(searchLower);
+    }
+    return item.name?.toLowerCase().includes(searchLower);
+  });
+}
+
+/**
+ * Get paginated items
+ */
+function getPaginatedItems(items, page, itemsPerPage) {
+  const start = (page - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return items.slice(start, end);
+}
+
+/**
+ * Calculate total pages
+ */
+function calculateTotalPages(totalItems, itemsPerPage) {
+  return Math.ceil(totalItems / itemsPerPage);
+}
+
+/**
+ * Get page numbers for pagination display
+ */
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5;
+
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) pages.push(i);
+      pages.push("...");
+      pages.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pages.push(1);
+      pages.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+      pages.push("...");
+      pages.push(totalPages);
+    }
+  }
+  return pages;
+}
+
+/**
+ * Create form data from item
+ */
+function createFormDataFromItem(item, type) {
+  const baseData = {
+    id: item._id,
+    name: item.name || "",
+    email: item.email || "",
+    role: item.role || "user",
+    password: "",
+    description: item.description || "",
+    slug: item.slug || "",
+  };
+
+  if (type === "category") {
+    return baseData;
+  }
+  
+  if (type === "subcategory") {
+    return {
+      ...baseData,
+      category: item.category?._id || item.category?.id || item.category || "",
+    };
+  }
+  
+  if (type === "topic") {
+    return {
+      ...baseData,
+      subcategory: item.subcategory?._id || item.subcategory?.id || item.subcategory || "",
+    };
+  }
+  
+  if (type === "letter") {
+    return {
+      title: item.title || "",
+      content: item.content || "",
+      topic: item.topic?._id || item.topic?.id || item.topic || "",
+      letter_type: item.letter_type || "",
+      level: item.level || "",
+      full_code: item.full_code || "",
+    };
+  }
+  
+  if (type === "user") {
+    return {
+      ...baseData,
+      email: item.email || "",
+      role: item.role || "user",
+    };
+  }
+  
+  return baseData;
+}
+
+/**
+ * Get form fields based on type
+ */
+function getFormFields(formType, categories, subcategories, topics) {
+  const fields = {
+    user: [
+      { name: "name", label: "Name *", type: "text", placeholder: "Enter user name", required: true },
+      { name: "email", label: "Email *", type: "email", placeholder: "Enter email address", required: true },
+      { name: "password", label: "Password *", type: "password", placeholder: "Enter password", required: true, optionalWhenEditing: true },
+      { name: "role", label: "Role *", type: "select", options: ["user", "admin"], required: true },
+    ],
+    category: [
+      { name: "name", label: "Name *", type: "text", placeholder: "Enter category name", required: true },
+      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
+      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
+    ],
+    subcategory: [
+      { name: "category", label: "Category *", type: "select", options: categories, required: true, optionKey: "_id", optionLabel: "name" },
+      { name: "name", label: "Name *", type: "text", placeholder: "Enter subcategory name", required: true },
+      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
+      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
+    ],
+    topic: [
+      { name: "subcategory", label: "Subcategory *", type: "select", options: subcategories, required: true, optionKey: "_id", optionLabel: "name" },
+      { name: "name", label: "Name *", type: "text", placeholder: "Enter topic name", required: true },
+      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
+      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
+    ],
+    letter: [
+      { name: "topic", label: "Topic *", type: "select", options: topics, required: true, optionKey: "_id", optionLabel: "name" },
+      { name: "title", label: "Title *", type: "text", placeholder: "Enter letter title", required: true },
+      { name: "letter_type", label: "Letter Type", type: "text", placeholder: "e.g., A, B, C" },
+      { name: "level", label: "Level", type: "text", placeholder: "e.g., a, b, c" },
+      { name: "full_code", label: "Full Code", type: "text", placeholder: "e.g., A_a" },
+      { name: "content", label: "Content *", type: "textarea", placeholder: "Write the letter content…", rows: 6, required: true },
+    ],
+  };
+  
+  return fields[formType] || [];
+}
+
+/**
+ * Prepare mutation data based on type
+ */
+function prepareMutationData(formType, formData, editingItem) {
+  if (formType === "user") {
+    const data = { name: formData.name, email: formData.email, role: formData.role };
+    if (formData.password) data.password = formData.password;
+    return data;
+  }
+  
+  if (formType === "category") {
+    return { name: formData.name, slug: formData.slug, description: formData.description };
+  }
+  
+  if (formType === "subcategory") {
+    return { name: formData.name, slug: formData.slug, description: formData.description, category: formData.category };
+  }
+  
+  if (formType === "topic") {
+    return { name: formData.name, slug: formData.slug, description: formData.description, subcategory: formData.subcategory };
+  }
+  
+  if (formType === "letter") {
+    return {
+      title: formData.title,
+      content: formData.content,
+      topic: formData.topic,
+      letter_type: formData.letter_type,
+      level: formData.level,
+      full_code: formData.full_code,
+    };
+  }
+  
+  return formData;
+}
+
+/**
+ * Calculate statistics for dashboard
+ */
+function calculateStats(users, letters, categories, topics) {
+  return [
+    { label: "Total Users", value: users.length, icon: Users, from: "indigo", to: "purple", light: "indigo-50", text: "indigo-700", color: "indigo-500" },
+    { label: "Total Letters", value: letters.length, icon: FileText, from: "emerald", to: "teal", light: "emerald-50", text: "emerald-700", color: "emerald-500" },
+    { label: "Categories", value: categories.length, icon: Layers, from: "blue", to: "cyan", light: "blue-50", text: "blue-700", color: "blue-500" },
+    { label: "Topics", value: topics.length, icon: BookOpen, from: "amber", to: "orange", light: "amber-50", text: "amber-700", color: "amber-500" },
+  ];
+}
+
+/**
+ * Get content breakdown items
+ */
+function getContentBreakdownItems(categories, subcategories, topics, letters) {
+  const total = categories.length + subcategories.length + topics.length + letters.length || 1;
+  
+  return [
+    { label: "Categories", value: categories.length, color: "indigo", total, percentage: Math.round((categories.length / total) * 100) },
+    { label: "Subcategories", value: subcategories.length, color: "emerald", total, percentage: Math.round((subcategories.length / total) * 100) },
+    { label: "Topics", value: topics.length, color: "sky", total, percentage: Math.round((topics.length / total) * 100) },
+    { label: "Letters", value: letters.length, color: "amber", total, percentage: Math.round((letters.length / total) * 100) },
+  ];
+}
+
+/**
+ * Get quick actions items
+ */
+function getQuickActionsItems() {
+  return [
+    { label: "Add User", type: "user", ...ACCENT.users },
+    { label: "Add Category", type: "category", ...ACCENT.categories },
+    { label: "Add Subcategory", type: "subcategory", ...ACCENT.subcategories },
+    { label: "Add Topic", type: "topic", ...ACCENT.topics },
+    { label: "Add Letter", type: "letter", ...ACCENT.letters },
+  ];
+}
+
+/**
+ * Get success message for CRUD operations
+ */
+function getSuccessMessage(type, action) {
+  const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+  const messages = {
+    create: `${typeName} created successfully`,
+    update: `${typeName} updated successfully`,
+    delete: `${typeName} deleted successfully`,
+  };
+  return messages[action] || `${action} ${type} completed`;
+}
+
+/**
+ * Reset pagination for a specific tab
+ */
+function resetPaginationForTab(setPagination, tab) {
+  setPagination((prev) => ({
+    ...prev,
+    [tab]: { ...prev[tab], page: 1 },
+  }));
+}
+
+/**
+ * Handle API error and show notification
+ */
+function handleApiError(error, showNotification, defaultMessage) {
+  showNotification(error.message || defaultMessage, "error");
+}
+
+// ==================== PAGINATION COMPONENT ====================
+
+function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }) {
+  const getPageNumbersForDisplay = () => getPageNumbers(currentPage, totalPages);
 
   if (totalPages <= 1) return null;
 
@@ -117,7 +484,7 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={ADMIN_PAGINATION.buttonBase(currentPage === 1)}>
           <ChevronLeft size={14} /> Prev
         </button>
-        {getPageNumbers().map((page, index) =>
+        {getPageNumbersForDisplay().map((page, index) =>
           page === "..." ? (
             <span key={`dots-${index}`} className={ADMIN_PAGINATION.ellipsis}>...</span>
           ) : (
@@ -141,7 +508,8 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
   );
 }
 
-// PageHeader Component
+// ==================== PAGE HEADER COMPONENT ====================
+
 function PageHeader({ title, subtitle, count, action }) {
   return (
     <div className={ADMIN_PAGE_HEADER.container}>
@@ -157,7 +525,8 @@ function PageHeader({ title, subtitle, count, action }) {
   );
 }
 
-// AddBtn Component
+// ==================== ADD BUTTON COMPONENT ====================
+
 function AddBtn({ label, onClick, ac }) {
   return (
     <button onClick={onClick} className={ADMIN_ADD_BUTTON.button(ac.from, ac.to)}>
@@ -166,6 +535,8 @@ function AddBtn({ label, onClick, ac }) {
     </button>
   );
 }
+
+// ==================== MAIN COMPONENT ====================
 
 export default function AdminDashboard({ defaultTab = "dashboard" }) {
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -231,7 +602,7 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
       router.push("/login");
       return;
     }
-    if (user && user.role !== "admin") {
+    if (user && !isAdminUser(user)) {
       router.push("/dashboard");
     }
   }, [userError, router, user]);
@@ -255,23 +626,7 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
     setShowPassword(false);
     if (item) {
       setEditingItem(item);
-      setFormData({
-        id: item._id,
-        name: item.name || "",
-        email: item.email || "",
-        role: item.role || "user",
-        password: "",
-        description: item.description || "",
-        slug: item.slug || "",
-        category: item.category?._id || item.category?.id || item.category || "",
-        subcategory: item.subcategory?._id || item.subcategory?.id || item.subcategory || "",
-        topic: item.topic?._id || item.topic?.id || item.topic || "",
-        title: item.title || "",
-        content: item.content || "",
-        letter_type: item.letter_type || "",
-        level: item.level || "",
-        full_code: item.full_code || "",
-      });
+      setFormData(createFormDataFromItem(item, type));
     } else {
       setEditingItem(null);
       setFormData({});
@@ -289,29 +644,28 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
 
   const handleDelete = (type, id) => {
     if (!confirm(`Delete this ${type}?`)) return;
+    
     if (type === "user") {
       deleteAdminUser(id)
         .then(() => {
-          showNotification("User deleted successfully");
+          showNotification(getSuccessMessage(type, "delete"));
           queryClient.invalidateQueries(["users"]);
         })
-        .catch((error) => showNotification(error.message || "Failed to delete user", "error"));
+        .catch((error) => handleApiError(error, showNotification, `Failed to delete ${type}`));
     } else {
-      const map = {
-        category: deleteCategoryMutation,
-        subcategory: deleteSubcategoryMutation,
-        topic: deleteTopicMutation,
-        letter: deleteLetterMutation,
-      };
-      map[type]?.mutate(id, {
+      const mutationMap = getMutationMap(
+        deleteCategoryMutation,
+        deleteSubcategoryMutation,
+        deleteTopicMutation,
+        deleteLetterMutation
+      );
+      
+      mutationMap[type]?.mutate(id, {
         onSuccess: () => {
-          showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
-          setPagination((prev) => ({
-            ...prev,
-            [type === "letter" ? "letters" : type + "s"]: { ...prev[type === "letter" ? "letters" : type + "s"], page: 1 },
-          }));
+          showNotification(getSuccessMessage(type, "delete"));
+          resetPaginationForTab(setPagination, getPaginationKey(type));
         },
-        onError: (error) => showNotification(error.message || `Failed to delete ${type}`, "error"),
+        onError: (error) => handleApiError(error, showNotification, `Failed to delete ${type}`),
       });
     }
   };
@@ -327,89 +681,56 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
     e.preventDefault();
     if (!isClient) return;
 
-    if (formType === "user") {
-      const d = { name: formData.name, email: formData.email, role: formData.role };
-      if (formData.password) d.password = formData.password;
-      if (editingItem) {
-        updateAdminUser(editingItem._id, d)
-          .then(() => { showNotification("User updated successfully"); closeForm(); queryClient.invalidateQueries(["users"]); })
-          .catch((error) => showNotification(error.message || "Failed to update user", "error"));
+    const mutationMap = {
+      user: { create: createAdminUser, update: updateAdminUser, isService: true },
+      category: { create: createCategoryMutation, update: updateCategoryMutation, isService: false },
+      subcategory: { create: createSubcategoryMutation, update: updateSubcategoryMutation, isService: false },
+      topic: { create: createTopicMutation, update: updateTopicMutation, isService: false },
+      letter: { create: createLetterMutation, update: updateLetterMutation, isService: false },
+    };
+
+    const mutation = mutationMap[formType];
+    if (!mutation) return;
+
+    const data = prepareMutationData(formType, formData, editingItem);
+    
+    const onSuccessCallback = () => {
+      showNotification(getSuccessMessage(formType, editingItem ? "update" : "create"));
+      closeForm();
+      resetPaginationForTab(setPagination, getPaginationKey(formType));
+      if (formType !== "user") {
+        queryClient.invalidateQueries(["contentTree"]);
       } else {
-        createAdminUser(d)
-          .then(() => { showNotification("User created successfully"); closeForm(); queryClient.invalidateQueries(["users"]); })
-          .catch((error) => showNotification(error.message || "Failed to create user", "error"));
+        queryClient.invalidateQueries(["users"]);
       }
-    } else if (formType === "category") {
-      const d = { name: formData.name, slug: formData.slug, description: formData.description };
+    };
+
+    const onErrorCallback = (error) => {
+      handleApiError(error, showNotification, `Failed to ${editingItem ? "update" : "create"} ${formType}`);
+    };
+
+    if (mutation.isService) {
+      const action = editingItem ? mutation.update(editingItem._id, data) : mutation.create(data);
+      action.then(onSuccessCallback).catch(onErrorCallback);
+    } else {
+      const action = editingItem 
+        ? mutation.update.mutate({ id: editingItem._id, data }) 
+        : mutation.create.mutate(data);
+      
       if (editingItem) {
-        updateCategoryMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification("Category updated successfully"); closeForm(); setPagination((prev) => ({ ...prev, categories: { ...prev.categories, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to update category", "error"),
-        });
+        mutation.update.mutate({ id: editingItem._id, data }, { onSuccess: onSuccessCallback, onError: onErrorCallback });
       } else {
-        createCategoryMutation.mutate(d, {
-          onSuccess: () => { showNotification("Category created successfully"); closeForm(); setPagination((prev) => ({ ...prev, categories: { ...prev.categories, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to create category", "error"),
-        });
-      }
-    } else if (formType === "subcategory") {
-      const d = { name: formData.name, slug: formData.slug, description: formData.description, category: formData.category };
-      if (editingItem) {
-        updateSubcategoryMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification("Subcategory updated successfully"); closeForm(); setPagination((prev) => ({ ...prev, subcategories: { ...prev.subcategories, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to update subcategory", "error"),
-        });
-      } else {
-        createSubcategoryMutation.mutate(d, {
-          onSuccess: () => { showNotification("Subcategory created successfully"); closeForm(); setPagination((prev) => ({ ...prev, subcategories: { ...prev.subcategories, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to create subcategory", "error"),
-        });
-      }
-    } else if (formType === "topic") {
-      const d = { name: formData.name, slug: formData.slug, description: formData.description, subcategory: formData.subcategory };
-      if (editingItem) {
-        updateTopicMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification("Topic updated successfully"); closeForm(); setPagination((prev) => ({ ...prev, topics: { ...prev.topics, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to update topic", "error"),
-        });
-      } else {
-        createTopicMutation.mutate(d, {
-          onSuccess: () => { showNotification("Topic created successfully"); closeForm(); setPagination((prev) => ({ ...prev, topics: { ...prev.topics, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to create topic", "error"),
-        });
-      }
-    } else if (formType === "letter") {
-      const d = {
-        title: formData.title, content: formData.content, topic: formData.topic,
-        letter_type: formData.letter_type, level: formData.level, full_code: formData.full_code,
-      };
-      if (editingItem) {
-        updateLetterMutation.mutate({ id: editingItem._id, data: d }, {
-          onSuccess: () => { showNotification("Letter updated successfully"); closeForm(); setPagination((prev) => ({ ...prev, letters: { ...prev.letters, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to update letter", "error"),
-        });
-      } else {
-        createLetterMutation.mutate(d, {
-          onSuccess: () => { showNotification("Letter created successfully"); closeForm(); setPagination((prev) => ({ ...prev, letters: { ...prev.letters, page: 1 } })); },
-          onError: (error) => showNotification(error.message || "Failed to create letter", "error"),
-        });
+        mutation.create.mutate(data, { onSuccess: onSuccessCallback, onError: onErrorCallback });
       }
     }
   };
 
   const getPaginatedData = (data, tab) => {
-    const filtered = data.filter((item) => {
-      if (tab === "users") return item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.email?.toLowerCase().includes(searchQuery.toLowerCase());
-      if (tab === "letters") return item.title?.toLowerCase().includes(searchQuery.toLowerCase());
-      return item.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-
+    const filtered = filterBySearchQuery(data, tab, searchQuery);
     const { page, itemsPerPage } = pagination[tab];
-    const start = (page - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const paginatedItems = filtered.slice(start, end);
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
+    const paginatedItems = getPaginatedItems(filtered, page, itemsPerPage);
+    const totalPages = calculateTotalPages(filtered.length, itemsPerPage);
+    
     return { items: paginatedItems, totalPages, totalItems: filtered.length };
   };
 
@@ -438,13 +759,9 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
 
   const errorMessage = contentTreeError ? contentTreeError.message : null;
   const accentColor = ACCENT[activeTab] || ACCENT.categories;
-
-  const stats = [
-    { label: "Total Users", value: users.length, icon: Users, from: "indigo", to: "purple", light: "indigo-50", text: "indigo-700", color: "indigo-500" },
-    { label: "Total Letters", value: letters.length, icon: FileText, from: "emerald", to: "teal", light: "emerald-50", text: "emerald-700", color: "emerald-500" },
-    { label: "Categories", value: categories.length, icon: Layers, from: "blue", to: "cyan", light: "blue-50", text: "blue-700", color: "blue-500" },
-    { label: "Topics", value: topics.length, icon: BookOpen, from: "amber", to: "orange", light: "amber-50", text: "amber-700", color: "amber-500" },
-  ];
+  const stats = calculateStats(users, letters, categories, topics);
+  const contentBreakdownItems = getContentBreakdownItems(categories, subcategories, topics, letters);
+  const quickActionsItems = getQuickActionsItems();
 
   // Table Component
   const Table = ({ cols, rows, loading, icon: Icon, empty, tabName }) => (
@@ -470,20 +787,20 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
                   {cols.map((c) => (
                     <th key={c} className={ADMIN_TABLE.th}>{c}</th>
                   ))}
-                </tr>
+                 </tr>
               </thead>
               <tbody>{rows}</tbody>
             </table>
           </div>
           <Pagination
             currentPage={pagination[tabName].page}
-            totalPages={Math.ceil(getPaginatedData(
-              tabName === "users" ? users : tabName === "letters" ? letters : tabName === "categories" ? categories : tabName === "subcategories" ? subcategories : topics,
+            totalPages={getPaginatedData(
+              getDataByTab(tabName, categories, subcategories, topics, letters, users),
               tabName
-            ).totalPages)}
+            ).totalPages}
             onPageChange={(page) => handlePageChange(tabName, page)}
             totalItems={getPaginatedData(
-              tabName === "users" ? users : tabName === "letters" ? letters : tabName === "categories" ? categories : tabName === "subcategories" ? subcategories : topics,
+              getDataByTab(tabName, categories, subcategories, topics, letters, users),
               tabName
             ).totalItems}
             itemsPerPage={pagination[tabName].itemsPerPage}
@@ -500,6 +817,81 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
   const renderForm = () => {
     if (!showForm) return null;
     const ac = ACCENT[formType] || ACCENT.categories;
+    const formFields = getFormFields(formType, categories, subcategories, topics);
+
+    const renderField = (field) => {
+      if (field.type === "select") {
+        return (
+          <div key={field.name}>
+            <label className={ADMIN_FORM.label}>{field.label}</label>
+            <select 
+              value={formData[field.name] || ""} 
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })} 
+              required={field.required} 
+              className={ADMIN_FORM.select}
+            >
+              <option value="">Choose a {field.label.toLowerCase()}…</option>
+              {field.options.map((opt) => (
+                <option key={opt[field.optionKey]} value={opt[field.optionKey]}>
+                  {opt[field.optionLabel]}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      }
+      
+      if (field.type === "textarea") {
+        return (
+          <div key={field.name}>
+            <label className={ADMIN_FORM.label}>{field.label}</label>
+            <textarea 
+              placeholder={field.placeholder} 
+              value={formData[field.name] || ""} 
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })} 
+              required={field.required} 
+              rows={field.rows} 
+              className={ADMIN_FORM.textarea} 
+            />
+          </div>
+        );
+      }
+      
+      if (field.name === "password" && formType === "user") {
+        return (
+          <div key={field.name} className={ADMIN_PASSWORD.container}>
+            <label className={ADMIN_FORM.label}>{field.label}</label>
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder={editingItem ? "Leave blank to keep current password" : field.placeholder} 
+              value={formData.password || ""} 
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+              required={!editingItem && field.required} 
+              className={ADMIN_FORM.inputBase} 
+            />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className={ADMIN_PASSWORD.toggleBtn}>
+              {showPassword ? "Hide" : "Show"}
+            </button>
+            {editingItem && <p className={ADMIN_PASSWORD.hint}>Current password is hidden for security. Enter a new password only if you want to change it.</p>}
+          </div>
+        );
+      }
+      
+      return (
+        <div key={field.name}>
+          <label className={ADMIN_FORM.label}>{field.label}</label>
+          <input 
+            type={field.type} 
+            placeholder={field.placeholder} 
+            value={formData[field.name] || ""} 
+            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })} 
+            required={field.required} 
+            className={ADMIN_FORM.inputBase} 
+          />
+        </div>
+      );
+    };
+
     return (
       <div className={ADMIN_MODAL.overlay}>
         <div className={ADMIN_MODAL.container}>
@@ -514,99 +906,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {formType === "user" && (
-              <>
-                <div>
-                  <label className={ADMIN_FORM.label}>Name *</label>
-                  <input type="text" placeholder="Enter user name" value={formData.name || ""} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className={ADMIN_FORM.inputBase} />
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Email *</label>
-                  <input type="email" placeholder="Enter email address" value={formData.email || ""} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className={ADMIN_FORM.inputBase} />
-                </div>
-                <div className={ADMIN_PASSWORD.container}>
-                  <label className={ADMIN_FORM.label}>{editingItem ? "New Password (optional)" : "Password *"}</label>
-                  <input type={showPassword ? "text" : "password"} placeholder={editingItem ? "Leave blank to keep current password" : "Enter password"} value={formData.password || ""} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required={!editingItem} className={ADMIN_FORM.inputBase} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={ADMIN_PASSWORD.toggleBtn}>{showPassword ? "Hide" : "Show"}</button>
-                  {editingItem && <p className={ADMIN_PASSWORD.hint}>Current password is hidden for security. Enter a new password only if you want to change it.</p>}
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Role *</label>
-                  <select value={formData.role || "user"} onChange={(e) => setFormData({ ...formData, role: e.target.value })} required className={ADMIN_FORM.select}>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {(formType === "category" || formType === "subcategory" || formType === "topic") && (
-              <>
-                {formType === "subcategory" && (
-                  <div>
-                    <label className={ADMIN_FORM.label}>Category *</label>
-                    <select value={formData.category || ""} onChange={(e) => setFormData({ ...formData, category: e.target.value })} required className={ADMIN_FORM.select}>
-                      <option value="">Choose a category…</option>
-                      {categories.map((c) => (<option key={c._id} value={c._id}>{c.name}</option>))}
-                    </select>
-                  </div>
-                )}
-                {formType === "topic" && (
-                  <div>
-                    <label className={ADMIN_FORM.label}>Subcategory *</label>
-                    <select value={formData.subcategory || ""} onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })} required className={ADMIN_FORM.select}>
-                      <option value="">Choose a subcategory…</option>
-                      {subcategories.map((s) => (<option key={s._id} value={s._id}>{s.name}</option>))}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label className={ADMIN_FORM.label}>Name *</label>
-                  <input type="text" placeholder={`Enter ${formType} name`} value={formData.name || ""} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className={ADMIN_FORM.inputBase} />
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Slug</label>
-                  <input type="text" placeholder="URL-friendly identifier (optional)" value={formData.slug || ""} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className={ADMIN_FORM.inputBase} />
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Description</label>
-                  <textarea placeholder="Optional description…" value={formData.description || ""} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className={ADMIN_FORM.textarea} />
-                </div>
-              </>
-            )}
-
+            {formFields.map(renderField)}
+            
             {formType === "letter" && (
-              <>
-                <div>
-                  <label className={ADMIN_FORM.label}>Topic *</label>
-                  <select value={formData.topic || ""} onChange={(e) => setFormData({ ...formData, topic: e.target.value })} required className={ADMIN_FORM.select}>
-                    <option value="">Choose a topic…</option>
-                    {topics.map((t) => (<option key={t._id} value={t._id}>{t.name}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Title *</label>
-                  <input type="text" placeholder="Enter letter title" value={formData.title || ""} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required className={ADMIN_FORM.inputBase} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={ADMIN_FORM.label}>Letter Type</label>
-                    <input type="text" placeholder="e.g., A, B, C" value={formData.letter_type || ""} onChange={(e) => setFormData({ ...formData, letter_type: e.target.value })} className={ADMIN_FORM.inputBase} />
-                  </div>
-                  <div>
-                    <label className={ADMIN_FORM.label}>Level</label>
-                    <input type="text" placeholder="e.g., a, b, c" value={formData.level || ""} onChange={(e) => setFormData({ ...formData, level: e.target.value })} className={ADMIN_FORM.inputBase} />
-                  </div>
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Full Code</label>
-                  <input type="text" placeholder="e.g., A_a" value={formData.full_code || ""} onChange={(e) => setFormData({ ...formData, full_code: e.target.value })} className={ADMIN_FORM.inputBase} />
-                </div>
-                <div>
-                  <label className={ADMIN_FORM.label}>Content *</label>
-                  <textarea placeholder="Write the letter content…" value={formData.content || ""} onChange={(e) => setFormData({ ...formData, content: e.target.value })} required rows={6} className={ADMIN_FORM.textarea} />
-                </div>
-              </>
+              <div className="grid grid-cols-2 gap-3">
+                {/* This is handled by the field renderer now */}
+              </div>
             )}
 
             <div className={ADMIN_MODAL.buttonGroup}>
@@ -618,6 +923,72 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
           </form>
         </div>
       </div>
+    );
+  };
+
+  const renderUserRow = (u) => {
+    const roleStyles = getRoleBadgeStyles(u.role);
+    return (
+      <tr key={u._id} className="hover:bg-gray-50 transition-colors">
+        <td className={tdStyle}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient("user")} flex items-center justify-center`}>
+              <span className="text-white text-sm font-bold">{getUserInitials(u.name)}</span>
+            </div>
+            <span className="font-semibold text-gray-900">{u.name}</span>
+          </div>
+        </td>
+        <td className={tdStyle}><span className="text-gray-500">{u.email}</span></td>
+        <td className={tdStyle}><span className={ADMIN_BADGES.badge(roleStyles.bg, roleStyles.text)}>{u.role}</span></td>
+        <td className={`${tdStyle} text-gray-400`}>{formatDate(u.createdAt)}</td>
+        <td className={tdStyle}>
+          <div className="flex gap-2">
+            <button onClick={() => openForm("user", u)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
+            <button onClick={() => handleDelete("user", u._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderContentRow = (item, type) => {
+    return (
+      <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+        <td className={tdStyle}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(type)} flex items-center justify-center`}>
+              {type === "category" && <Layers size={14} className="text-white" />}
+              {type === "subcategory" && <FolderTree size={14} className="text-white" />}
+              {type === "topic" && <BookOpen size={14} className="text-white" />}
+              {type === "letter" && <FileText size={14} className="text-white" />}
+            </div>
+            <span className="font-semibold text-gray-900">{item.name || item.title}</span>
+          </div>
+        </td>
+        {type === "letter" && (
+          <td className={tdStyle}><span className="font-semibold text-gray-700">{item.letter_type || "—"}</span></td>
+        )}
+        <td className={`${tdStyle} max-w-xs`}>
+          <span className={`${(!item.description || item.description === "NULL") && type !== "letter" ? 'text-gray-400 italic' : 'text-gray-500'} truncate block`}>
+            {type === "letter" 
+              ? (item.content?.substring(0, 100) || "—")
+              : (!item.description || item.description === "NULL" ? "No Description" : item.description)
+            }
+          </span>
+        </td>
+        {type !== "letter" && (
+          <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(item.createdAt)}</td>
+        )}
+        {type === "letter" && (
+          <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(item.createdAt)}</td>
+        )}
+        <td className={tdStyle}>
+          <div className="flex gap-2">
+            <button onClick={() => openForm(type, item)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
+            <button onClick={() => handleDelete(type, item._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
+          </div>
+        </td>
+      </tr>
     );
   };
 
@@ -669,7 +1040,7 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
                 type="text"
                 placeholder="Search content…"
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setPagination((prev) => ({ ...prev, [activeTab]: { ...prev[activeTab], page: 1 } })); }}
+                onChange={(e) => { setSearchQuery(e.target.value); resetPaginationForTab(setPagination, activeTab); }}
                 className={ADMIN_SIDEBAR.searchInput}
               />
             </div>
@@ -696,7 +1067,7 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
 
           <div className={ADMIN_SIDEBAR.userSection}>
             <div className={ADMIN_SIDEBAR.userBox}>
-              <div className={ADMIN_SIDEBAR.userAvatar}>{user?.email?.charAt(0).toUpperCase() || "A"}</div>
+              <div className={ADMIN_SIDEBAR.userAvatar}>{getUserInitials(user?.email)}</div>
               <div className="overflow-hidden flex-1">
                 <div className={ADMIN_USER.email}>{user?.email}</div>
                 <div className="text-xs text-indigo-400 font-medium">Administrator</div>
@@ -755,39 +1126,24 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
                     <div className={ADMIN_CONTENT_BREAKDOWN.header}>
                       <h2 className={ADMIN_CONTENT_BREAKDOWN.title}>Content Breakdown</h2>
                     </div>
-                    {[
-                      { label: "Categories", value: categories.length, color: "indigo" },
-                      { label: "Subcategories", value: subcategories.length, color: "emerald" },
-                      { label: "Topics", value: topics.length, color: "sky" },
-                      { label: "Letters", value: letters.length, color: "amber" },
-                    ].map((item, i) => {
-                      const total = categories.length + subcategories.length + topics.length + letters.length || 1;
-                      const pct = Math.round((item.value / total) * 100);
-                      return (
-                        <div key={i} className={ADMIN_CONTENT_BREAKDOWN.item}>
-                          <div className={ADMIN_CONTENT_BREAKDOWN.itemHeader}>
-                            <span>{item.label}</span>
-                            <span className={ADMIN_CONTENT_BREAKDOWN.itemValue(item.color)}>{item.value}</span>
-                          </div>
-                          <div className={ADMIN_CONTENT_BREAKDOWN.progressBar}>
-                            <div className={ADMIN_CONTENT_BREAKDOWN.progressFill(item.color)} style={{ width: `${pct}%` }} />
-                          </div>
+                    {contentBreakdownItems.map((item, i) => (
+                      <div key={i} className={ADMIN_CONTENT_BREAKDOWN.item}>
+                        <div className={ADMIN_CONTENT_BREAKDOWN.itemHeader}>
+                          <span>{item.label}</span>
+                          <span className={ADMIN_CONTENT_BREAKDOWN.itemValue(item.color)}>{item.value}</span>
                         </div>
-                      );
-                    })}
+                        <div className={ADMIN_CONTENT_BREAKDOWN.progressBar}>
+                          <div className={ADMIN_CONTENT_BREAKDOWN.progressFill(item.color)} style={{ width: `${item.percentage}%` }} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Quick Actions */}
                   <div className={ADMIN_QUICK_ACTIONS.container}>
                     <h2 className={ADMIN_QUICK_ACTIONS.title}>Quick Actions</h2>
                     <div className={ADMIN_QUICK_ACTIONS.buttonContainer}>
-                      {[
-                        { label: "Add User", type: "user", ...ACCENT.users },
-                        { label: "Add Category", type: "category", ...ACCENT.categories },
-                        { label: "Add Subcategory", type: "subcategory", ...ACCENT.subcategories },
-                        { label: "Add Topic", type: "topic", ...ACCENT.topics },
-                        { label: "Add Letter", type: "letter", ...ACCENT.letters },
-                      ].map((a, i) => (
+                      {quickActionsItems.map((a, i) => (
                         <button
                           key={i}
                           onClick={() => openForm(a.type)}
@@ -811,32 +1167,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
               <div className="animate-fadeIn">
                 <PageHeader title="Users" subtitle="Manage user accounts and permissions" count={usersData_paginated.totalItems} action={<AddBtn label="User" onClick={() => openForm("user")} ac={ACCENT.users} />} />
                 <Table
-                  cols={["User", "Email", "Role", "Joined", "Actions"]}
-                  icon={Users}
-                  empty="No users found"
+                  cols={getTableColumns("users")}
+                  icon={getTableIcon("users")}
+                  empty={getEmptyMessage("users")}
                   loading={usersLoading}
                   tabName="users"
-                  rows={usersData_paginated.items.map((u) => (
-                    <tr key={u._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={tdStyle}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">{u.name?.charAt(0).toUpperCase() || "U"}</span>
-                          </div>
-                          <span className="font-semibold text-gray-900">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className={tdStyle}><span className="text-gray-500">{u.email}</span></td>
-                      <td className={tdStyle}><span className={ADMIN_BADGES.badge(u.role === "admin" ? "purple-50" : "blue-50", u.role === "admin" ? "purple-700" : "blue-700")}>{u.role}</span></td>
-                      <td className={`${tdStyle} text-gray-400`}>{formatDate(u.createdAt)}</td>
-                      <td className={tdStyle}>
-                        <div className="flex gap-2">
-                          <button onClick={() => openForm("user", u)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
-                          <button onClick={() => handleDelete("user", u._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  rows={usersData_paginated.items.map(renderUserRow)}
                 />
               </div>
             )}
@@ -846,33 +1182,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
               <div className="animate-fadeIn">
                 <PageHeader title="Categories" subtitle="Manage content categories" count={categoriesData_paginated.totalItems} action={<AddBtn label="Category" onClick={() => openForm("category")} ac={ACCENT.categories} />} />
                 <Table
-                  cols={["Category", "Description", "Created", "Actions"]}
-                  icon={Layers}
-                  empty="No categories yet. Add a category to see it here."
+                  cols={getTableColumns("categories")}
+                  icon={getTableIcon("categories")}
+                  empty={getEmptyMessage("categories")}
                   loading={contentTreeLoading}
                   tabName="categories"
-                  rows={categoriesData_paginated.items.map((cat) => (
-                    <tr key={cat._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={tdStyle}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center"><Layers size={14} className="text-white" /></div>
-                          <span className="font-semibold text-gray-900">{cat.name}</span>
-                        </div>
-                      </td>
-                      <td className={`${tdStyle} max-w-xs`}>
-                        <span className={`${!cat.description || cat.description === "NULL" ? 'text-gray-400 italic' : 'text-gray-500'} truncate block`}>
-                          {!cat.description || cat.description === "NULL" ? "No Description" : cat.description}
-                        </span>
-                      </td>
-                      <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(cat.createdAt)}</td>
-                      <td className={tdStyle}>
-                        <div className="flex gap-2">
-                          <button onClick={() => openForm("category", cat)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
-                          <button onClick={() => handleDelete("category", cat._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  rows={categoriesData_paginated.items.map((item) => renderContentRow(item, "category"))}
                 />
               </div>
             )}
@@ -882,33 +1197,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
               <div className="animate-fadeIn">
                 <PageHeader title="Subcategories" subtitle="Manage content subcategories" count={subcategoriesData_paginated.totalItems} action={<AddBtn label="Subcategory" onClick={() => openForm("subcategory")} ac={ACCENT.subcategories} />} />
                 <Table
-                  cols={["Subcategory", "Description", "Created", "Actions"]}
-                  icon={FolderTree}
-                  empty="No subcategories yet"
+                  cols={getTableColumns("subcategories")}
+                  icon={getTableIcon("subcategories")}
+                  empty={getEmptyMessage("subcategories")}
                   loading={contentTreeLoading}
                   tabName="subcategories"
-                  rows={subcategoriesData_paginated.items.map((sub) => (
-                    <tr key={sub._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={tdStyle}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center"><FolderTree size={14} className="text-white" /></div>
-                          <span className="font-semibold text-gray-900">{sub.name}</span>
-                        </div>
-                      </td>
-                      <td className={`${tdStyle} max-w-xs`}>
-                        <span className={`${!sub.description || sub.description === "NULL" ? 'text-gray-400 italic' : 'text-gray-500'} truncate block`}>
-                          {!sub.description || sub.description === "NULL" ? "No Description" : sub.description}
-                        </span>
-                      </td>
-                      <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(sub.createdAt)}</td>
-                      <td className={tdStyle}>
-                        <div className="flex gap-2">
-                          <button onClick={() => openForm("subcategory", sub)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
-                          <button onClick={() => handleDelete("subcategory", sub._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  rows={subcategoriesData_paginated.items.map((item) => renderContentRow(item, "subcategory"))}
                 />
               </div>
             )}
@@ -918,33 +1212,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
               <div className="animate-fadeIn">
                 <PageHeader title="Topics" subtitle="Manage content topics" count={topicsData_paginated.totalItems} action={<AddBtn label="Topic" onClick={() => openForm("topic")} ac={ACCENT.topics} />} />
                 <Table
-                  cols={["Topic", "Description", "Created", "Actions"]}
-                  icon={BookOpen}
-                  empty="No topics yet"
+                  cols={getTableColumns("topics")}
+                  icon={getTableIcon("topics")}
+                  empty={getEmptyMessage("topics")}
                   loading={contentTreeLoading}
                   tabName="topics"
-                  rows={topicsData_paginated.items.map((topic) => (
-                    <tr key={topic._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={tdStyle}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center"><BookOpen size={14} className="text-white" /></div>
-                          <span className="font-semibold text-gray-900">{topic.name}</span>
-                        </div>
-                      </td>
-                      <td className={`${tdStyle} max-w-xs`}>
-                        <span className={`${!topic.description || topic.description === "NULL" ? 'text-gray-400 italic' : 'text-gray-500'} truncate block`}>
-                          {!topic.description || topic.description === "NULL" ? "No Description" : topic.description}
-                        </span>
-                      </td>
-                      <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(topic.createdAt)}</td>
-                      <td className={tdStyle}>
-                        <div className="flex gap-2">
-                          <button onClick={() => openForm("topic", topic)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
-                          <button onClick={() => handleDelete("topic", topic._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  rows={topicsData_paginated.items.map((item) => renderContentRow(item, "topic"))}
                 />
               </div>
             )}
@@ -954,32 +1227,12 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
               <div className="animate-fadeIn">
                 <PageHeader title="Letters" subtitle="Manage all wellness letters" count={lettersData_paginated.totalItems} action={<AddBtn label="Letter" onClick={() => openForm("letter")} ac={ACCENT.letters} />} />
                 <Table
-                  cols={["Letter", "Type", "Content Preview", "Created", "Actions"]}
-                  icon={FileText}
-                  empty="No letters yet"
+                  cols={getTableColumns("letters")}
+                  icon={getTableIcon("letters")}
+                  empty={getEmptyMessage("letters")}
                   loading={contentTreeLoading}
                   tabName="letters"
-                  rows={lettersData_paginated.items.map((letter) => (
-                    <tr key={letter._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={tdStyle}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center"><FileText size={14} className="text-white" /></div>
-                          <span className="font-semibold text-gray-900">{letter.title}</span>
-                        </div>
-                      </td>
-                      <td className={tdStyle}><span className="font-semibold text-gray-700">{letter.letter_type || "—"}</span></td>
-                      <td className={`${tdStyle} max-w-md`}>
-                        <span className="text-gray-500 truncate block">{letter.content?.substring(0, 100) || "—"}</span>
-                      </td>
-                      <td className={`${tdStyle} text-gray-400 whitespace-nowrap`}>{formatDate(letter.createdAt)}</td>
-                      <td className={tdStyle}>
-                        <div className="flex gap-2">
-                          <button onClick={() => openForm("letter", letter)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.editBtn}`}><Edit2 size={15} /></button>
-                          <button onClick={() => handleDelete("letter", letter._id)} className={`${ADMIN_BUTTONS.actionBase} ${ADMIN_BUTTONS.deleteBtn}`}><Trash2 size={15} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  rows={lettersData_paginated.items.map((item) => renderContentRow(item, "letter"))}
                 />
               </div>
             )}
