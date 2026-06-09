@@ -1,57 +1,61 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ApiRoutes, Routes } from "@/lib/urls";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  FORGOT_PASSWORD_LAYOUT,
+  FORGOT_PASSWORD_LOGO,
+  FORGOT_PASSWORD_TITLE,
+  FORGOT_PASSWORD_CARD,
+  FORGOT_PASSWORD_FORM,
+  FORGOT_PASSWORD_FOOTER,
+} from '@/styles/forgot-password-styles';
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [devOtp, setDevOtp] = useState("");
+  const [error, setError] = useState('');
+  const [devOtp, setDevOtp] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const res = await fetch(ApiRoutes.auth.forgotPassword, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        sessionStorage.setItem("resetEmail", email);
+        sessionStorage.setItem('resetEmail', email);
         if (data.otp) {
-          sessionStorage.setItem("devOtp", data.otp);
+          sessionStorage.setItem('devOtp', data.otp);
           setDevOtp(data.otp);
         }
-        router.push(
-          `${Routes.auth.verifyOtp}?email=${encodeURIComponent(email)}`,
-        );
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
       } else {
         setError(data.message);
       }
     } catch (error) {
-      setError("Something went wrong. Please try again.");
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={PAGE_LAYOUTS.fullScreenWithPadding}>
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center">
+    <div className={FORGOT_PASSWORD_LAYOUT.container}>
+      <div className={FORGOT_PASSWORD_LAYOUT.wrapper}>
+        <div className={FORGOT_PASSWORD_LOGO.container}>
+          <div className={FORGOT_PASSWORD_LOGO.iconWrapper}>
             <svg
-              className="w-7 h-7 text-sky-500"
+              className={FORGOT_PASSWORD_LOGO.icon}
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -60,35 +64,27 @@ export default function ForgotPassword() {
           </div>
         </div>
 
-        {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-            Reset Password
-          </h1>
-          <p className="text-sm text-gray-500">
+        <div className={FORGOT_PASSWORD_TITLE.container}>
+          <h1 className={FORGOT_PASSWORD_TITLE.title}>Reset Password</h1>
+          <p className={FORGOT_PASSWORD_TITLE.subtitle}>
             Enter your email to receive a reset code.
           </p>
         </div>
 
-        {/* Card */}
-        <div className={CARD_LAYOUTS.whiteCard}>
+        <div className={FORGOT_PASSWORD_CARD.container}>
           {error && (
-            <div className={STATUS_MESSAGES.errorMessage}>
-              {error}
-            </div>
+            <div className={FORGOT_PASSWORD_CARD.error}>{error}</div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className={FORGOT_PASSWORD_FORM.container} onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
+              <label className={FORGOT_PASSWORD_FORM.label}>Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={INPUTS.base}
+                className={FORGOT_PASSWORD_FORM.input}
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -97,20 +93,16 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className={ACTION_BUTTONS.verifyButton}
+              className={FORGOT_PASSWORD_FORM.button}
             >
-              {loading ? "Sending..." : "Send Reset Code"}
+              {loading ? 'Sending...' : 'Send Reset Code'}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Remember your password?{" "}
-              <Link
-                href={Routes.auth.login}
-                className="text-sky-600 hover:text-sky-700 font-medium"
-              >
+          <div className={FORGOT_PASSWORD_FOOTER.container}>
+            <p className={FORGOT_PASSWORD_FOOTER.text}>
+              Remember your password?{' '}
+              <Link href="/login" className={FORGOT_PASSWORD_FOOTER.link}>
                 Sign In
               </Link>
             </p>

@@ -6,26 +6,23 @@ import nodemailer from 'nodemailer';
 const emailUser = process.env.EMAIL_USER;
 const emailPass = process.env.EMAIL_PASS?.replace(/\s/g, '');
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: emailUser,
-    pass: emailPass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-transporter.verify().then(() => {
-  console.log('✅ SMTP transporter initialized successfully');
-}).catch((err) => {
-  console.error('❌ SMTP transporter verification failed:', err);
-});
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: emailUser,
+      pass: emailPass,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+}
 
 async function sendOTPEmail(email, otp, name) {
+  const transporter = createTransporter();
   const mailOptions = {
     from: `"wordstowellness" <${emailUser}>`,
     to: email,
