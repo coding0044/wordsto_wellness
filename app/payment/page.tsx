@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { subscribe } from '@/services/auth-service';
+import { normalizePlanKey } from '@helpers/plans';
 import { Routes } from '@/lib/urls';
 import PlanStatusBadge from '@/components/plan-status-badge';
 
@@ -25,13 +26,6 @@ const paymentPlans = {
     description: 'Switch back to the free plan with limited monthly improvements and no payment required.',
   },
 };
-
-function normalizePlanKey(planKey) {
-  if (!planKey) return '';
-  const normalized = planKey.toLowerCase().trim();
-  if (normalized === 'pro') return 'expert';
-  return normalized;
-}
 
 export default function PaymentPage() {
   const router = useRouter();

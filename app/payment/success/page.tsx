@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { normalizePlanKey } from '@helpers/plans';
 
 const paymentPlans = {
   premium: {
@@ -12,13 +13,6 @@ const paymentPlans = {
     price: '$24.99 / month',
   },
 };
-
-function normalizePlanKey(planKey) {
-  if (!planKey) return '';
-  const normalized = planKey.toLowerCase();
-  if (normalized === 'pro') return 'expert';
-  return normalized;
-}
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();

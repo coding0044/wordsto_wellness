@@ -55,414 +55,35 @@ import {
   ADMIN_PAGE_HEADER,
   ADMIN_ADD_BUTTON,
 } from "@/styles";
+import {
+  formatDate,
+  getMutationMap,
+  getPaginationKey,
+  getDataByTab,
+  getEmptyMessage,
+  getTableIcon,
+  getTableColumns,
+  isAdminUser,
+  getUserInitials,
+  getAvatarGradient,
+  getRoleBadgeStyles,
+  filterBySearchQuery,
+  getPaginatedItems,
+  calculateTotalPages,
+  getPageNumbers,
+  getPaginatedData,
+  getFormFields,
+  prepareMutationData,
+  calculateStats,
+  getContentBreakdownItems,
+  getQuickActionsItems,
+  getSuccessMessage,
+  resetPaginationForTab,
+  handleApiError,
+} from "@helpers/admin-dashboard";
 
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
-
-// ==================== HELPER FUNCTIONS ====================
-
-/**
- * Format date to readable string
- */
-function formatDate(value) {
-  if (!value) return "N/A";
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    const alt = String(value).replace(" ", "T");
-    d = new Date(alt);
-    if (isNaN(d.getTime())) return "N/A";
-  }
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-/**
- * Get mutation map for content types
- */
-function getMutationMap(deleteCategory, deleteSubcategory, deleteTopic, deleteLetter) {
-  return {
-    category: deleteCategory,
-    subcategory: deleteSubcategory,
-    topic: deleteTopic,
-    letter: deleteLetter,
-  };
-}
-
-/**
- * Get plural key for pagination state
- */
-function getPaginationKey(type) {
-  const keyMap = {
-    category: "categories",
-    subcategory: "subcategories",
-    topic: "topics",
-    letter: "letters",
-    user: "users",
-  };
-  return keyMap[type] || type + "s";
-}
-
-/**
- * Get tab name for data fetching
- */
-function getDataByTab(tab, categories, subcategories, topics, letters, users) {
-  const dataMap = {
-    categories: categories,
-    subcategories: subcategories,
-    topics: topics,
-    letters: letters,
-    users: users,
-  };
-  return dataMap[tab] || [];
-}
-
-/**
- * Get empty message for table
- */
-function getEmptyMessage(type) {
-  const messages = {
-    users: "No users found",
-    categories: "No categories yet. Add a category to see it here.",
-    subcategories: "No subcategories yet",
-    topics: "No topics yet",
-    letters: "No letters yet",
-  };
-  return messages[type] || "No items found";
-}
-
-/**
- * Get icon for table
- */
-function getTableIcon(type) {
-  const iconMap = {
-    users: Users,
-    categories: Layers,
-    subcategories: FolderTree,
-    topics: BookOpen,
-    letters: FileText,
-  };
-  return iconMap[type] || FileText;
-}
-
-/**
- * Get table columns
- */
-function getTableColumns(type) {
-  const columnsMap = {
-    users: ["User", "Email", "Role", "Joined", "Actions"],
-    categories: ["Category", "Description", "Created", "Actions"],
-    subcategories: ["Subcategory", "Description", "Created", "Actions"],
-    topics: ["Topic", "Description", "Created", "Actions"],
-    letters: ["Letter", "Type", "Content Preview", "Created", "Actions"],
-  };
-  return columnsMap[type] || ["Name", "Description", "Created", "Actions"];
-}
-
-/**
- * Check if user is admin
- */
-function isAdminUser(user) {
-  return user && user.role === "admin";
-}
-
-/**
- * Get user initials for avatar
- */
-function getUserInitials(name) {
-  return name?.charAt(0).toUpperCase() || "U";
-}
-
-/**
- * Get gradient colors for avatar
- */
-function getAvatarGradient(type) {
-  const gradientMap = {
-    user: "from-indigo-500 to-purple-500",
-    category: "from-blue-500 to-cyan-500",
-    subcategory: "from-emerald-500 to-teal-500",
-    topic: "from-amber-500 to-orange-500",
-    letter: "from-rose-500 to-pink-500",
-  };
-  return gradientMap[type] || "from-gray-500 to-gray-600";
-}
-
-/**
- * Get badge styles for role
- */
-function getRoleBadgeStyles(role) {
-  return {
-    bg: role === "admin" ? "purple-50" : "blue-50",
-    text: role === "admin" ? "purple-700" : "blue-700",
-  };
-}
-
-/**
- * Filter items based on search query
- */
-function filterBySearchQuery(items, tab, searchQuery) {
-  if (!searchQuery) return items;
-  
-  const searchLower = searchQuery.toLowerCase();
-  
-  return items.filter((item) => {
-    if (tab === "users") {
-      return item.name?.toLowerCase().includes(searchLower) || 
-             item.email?.toLowerCase().includes(searchLower);
-    }
-    if (tab === "letters") {
-      return item.title?.toLowerCase().includes(searchLower);
-    }
-    return item.name?.toLowerCase().includes(searchLower);
-  });
-}
-
-/**
- * Get paginated items
- */
-function getPaginatedItems(items, page, itemsPerPage) {
-  const start = (page - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return items.slice(start, end);
-}
-
-/**
- * Calculate total pages
- */
-function calculateTotalPages(totalItems, itemsPerPage) {
-  return Math.ceil(totalItems / itemsPerPage);
-}
-
-/**
- * Get page numbers for pagination display
- */
-function getPageNumbers(currentPage, totalPages) {
-  const pages = [];
-  const maxVisible = 5;
-
-  if (totalPages <= maxVisible) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    if (currentPage <= 3) {
-      for (let i = 1; i <= 4; i++) pages.push(i);
-      pages.push("...");
-      pages.push(totalPages);
-    } else if (currentPage >= totalPages - 2) {
-      pages.push(1);
-      pages.push("...");
-      for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      pages.push("...");
-      for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-      pages.push("...");
-      pages.push(totalPages);
-    }
-  }
-  return pages;
-}
-
-/**
- * Create form data from item
- */
-function createFormDataFromItem(item, type) {
-  const baseData = {
-    id: item._id,
-    name: item.name || "",
-    email: item.email || "",
-    role: item.role || "user",
-    password: "",
-    description: item.description || "",
-    slug: item.slug || "",
-  };
-
-  if (type === "category") {
-    return baseData;
-  }
-  
-  if (type === "subcategory") {
-    return {
-      ...baseData,
-      category: item.category?._id || item.category?.id || item.category || "",
-    };
-  }
-  
-  if (type === "topic") {
-    return {
-      ...baseData,
-      subcategory: item.subcategory?._id || item.subcategory?.id || item.subcategory || "",
-    };
-  }
-  
-  if (type === "letter") {
-    return {
-      title: item.title || "",
-      content: item.content || "",
-      topic: item.topic?._id || item.topic?.id || item.topic || "",
-      letter_type: item.letter_type || "",
-      level: item.level || "",
-      full_code: item.full_code || "",
-    };
-  }
-  
-  if (type === "user") {
-    return {
-      ...baseData,
-      email: item.email || "",
-      role: item.role || "user",
-    };
-  }
-  
-  return baseData;
-}
-
-/**
- * Get form fields based on type
- */
-function getFormFields(formType, categories, subcategories, topics) {
-  const fields = {
-    user: [
-      { name: "name", label: "Name *", type: "text", placeholder: "Enter user name", required: true },
-      { name: "email", label: "Email *", type: "email", placeholder: "Enter email address", required: true },
-      { name: "password", label: "Password *", type: "password", placeholder: "Enter password", required: true, optionalWhenEditing: true },
-      { name: "role", label: "Role *", type: "select", options: ["user", "admin"], required: true },
-    ],
-    category: [
-      { name: "name", label: "Name *", type: "text", placeholder: "Enter category name", required: true },
-      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
-      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
-    ],
-    subcategory: [
-      { name: "category", label: "Category *", type: "select", options: categories, required: true, optionKey: "_id", optionLabel: "name" },
-      { name: "name", label: "Name *", type: "text", placeholder: "Enter subcategory name", required: true },
-      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
-      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
-    ],
-    topic: [
-      { name: "subcategory", label: "Subcategory *", type: "select", options: subcategories, required: true, optionKey: "_id", optionLabel: "name" },
-      { name: "name", label: "Name *", type: "text", placeholder: "Enter topic name", required: true },
-      { name: "slug", label: "Slug", type: "text", placeholder: "URL-friendly identifier (optional)" },
-      { name: "description", label: "Description", type: "textarea", placeholder: "Optional description…", rows: 3 },
-    ],
-    letter: [
-      { name: "topic", label: "Topic *", type: "select", options: topics, required: true, optionKey: "_id", optionLabel: "name" },
-      { name: "title", label: "Title *", type: "text", placeholder: "Enter letter title", required: true },
-      { name: "letter_type", label: "Letter Type", type: "text", placeholder: "e.g., A, B, C" },
-      { name: "level", label: "Level", type: "text", placeholder: "e.g., a, b, c" },
-      { name: "full_code", label: "Full Code", type: "text", placeholder: "e.g., A_a" },
-      { name: "content", label: "Content *", type: "textarea", placeholder: "Write the letter content…", rows: 6, required: true },
-    ],
-  };
-  
-  return fields[formType] || [];
-}
-
-/**
- * Prepare mutation data based on type
- */
-function prepareMutationData(formType, formData, editingItem) {
-  if (formType === "user") {
-    const data = { name: formData.name, email: formData.email, role: formData.role };
-    if (formData.password) data.password = formData.password;
-    return data;
-  }
-  
-  if (formType === "category") {
-    return { name: formData.name, slug: formData.slug, description: formData.description };
-  }
-  
-  if (formType === "subcategory") {
-    return { name: formData.name, slug: formData.slug, description: formData.description, category: formData.category };
-  }
-  
-  if (formType === "topic") {
-    return { name: formData.name, slug: formData.slug, description: formData.description, subcategory: formData.subcategory };
-  }
-  
-  if (formType === "letter") {
-    return {
-      title: formData.title,
-      content: formData.content,
-      topic: formData.topic,
-      letter_type: formData.letter_type,
-      level: formData.level,
-      full_code: formData.full_code,
-    };
-  }
-  
-  return formData;
-}
-
-/**
- * Calculate statistics for dashboard
- */
-function calculateStats(users, letters, categories, topics) {
-  return [
-    { label: "Total Users", value: users.length, icon: Users, from: "indigo", to: "purple", light: "indigo-50", text: "indigo-700", color: "indigo-500" },
-    { label: "Total Letters", value: letters.length, icon: FileText, from: "emerald", to: "teal", light: "emerald-50", text: "emerald-700", color: "emerald-500" },
-    { label: "Categories", value: categories.length, icon: Layers, from: "blue", to: "cyan", light: "blue-50", text: "blue-700", color: "blue-500" },
-    { label: "Topics", value: topics.length, icon: BookOpen, from: "amber", to: "orange", light: "amber-50", text: "amber-700", color: "amber-500" },
-  ];
-}
-
-/**
- * Get content breakdown items
- */
-function getContentBreakdownItems(categories, subcategories, topics, letters) {
-  const total = categories.length + subcategories.length + topics.length + letters.length || 1;
-  
-  return [
-    { label: "Categories", value: categories.length, color: "indigo", total, percentage: Math.round((categories.length / total) * 100) },
-    { label: "Subcategories", value: subcategories.length, color: "emerald", total, percentage: Math.round((subcategories.length / total) * 100) },
-    { label: "Topics", value: topics.length, color: "sky", total, percentage: Math.round((topics.length / total) * 100) },
-    { label: "Letters", value: letters.length, color: "amber", total, percentage: Math.round((letters.length / total) * 100) },
-  ];
-}
-
-/**
- * Get quick actions items
- */
-function getQuickActionsItems() {
-  return [
-    { label: "Add User", type: "user", ...ACCENT.users },
-    { label: "Add Category", type: "category", ...ACCENT.categories },
-    { label: "Add Subcategory", type: "subcategory", ...ACCENT.subcategories },
-    { label: "Add Topic", type: "topic", ...ACCENT.topics },
-    { label: "Add Letter", type: "letter", ...ACCENT.letters },
-  ];
-}
-
-/**
- * Get success message for CRUD operations
- */
-function getSuccessMessage(type, action) {
-  const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-  const messages = {
-    create: `${typeName} created successfully`,
-    update: `${typeName} updated successfully`,
-    delete: `${typeName} deleted successfully`,
-  };
-  return messages[action] || `${action} ${type} completed`;
-}
-
-/**
- * Reset pagination for a specific tab
- */
-function resetPaginationForTab(setPagination, tab) {
-  setPagination((prev) => ({
-    ...prev,
-    [tab]: { ...prev[tab], page: 1 },
-  }));
-}
-
-/**
- * Handle API error and show notification
- */
-function handleApiError(error, showNotification, defaultMessage) {
-  showNotification(error.message || defaultMessage, "error");
-}
 
 // ==================== PAGINATION COMPONENT ====================
 
@@ -725,20 +346,11 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
     }
   };
 
-  const getPaginatedData = (data, tab) => {
-    const filtered = filterBySearchQuery(data, tab, searchQuery);
-    const { page, itemsPerPage } = pagination[tab];
-    const paginatedItems = getPaginatedItems(filtered, page, itemsPerPage);
-    const totalPages = calculateTotalPages(filtered.length, itemsPerPage);
-    
-    return { items: paginatedItems, totalPages, totalItems: filtered.length };
-  };
-
-  const categoriesData_paginated = getPaginatedData(categories, "categories");
-  const subcategoriesData_paginated = getPaginatedData(subcategories, "subcategories");
-  const topicsData_paginated = getPaginatedData(topics, "topics");
-  const lettersData_paginated = getPaginatedData(letters, "letters");
-  const usersData_paginated = getPaginatedData(users, "users");
+  const categoriesData_paginated = getPaginatedData(categories, "categories", searchQuery, pagination);
+  const subcategoriesData_paginated = getPaginatedData(subcategories, "subcategories", searchQuery, pagination);
+  const topicsData_paginated = getPaginatedData(topics, "topics", searchQuery, pagination);
+  const lettersData_paginated = getPaginatedData(letters, "letters", searchQuery, pagination);
+  const usersData_paginated = getPaginatedData(users, "users", searchQuery, pagination);
 
   if (!isClient || userLoading || contentTreeLoading) {
     return (
@@ -796,12 +408,16 @@ export default function AdminDashboard({ defaultTab = "dashboard" }) {
             currentPage={pagination[tabName].page}
             totalPages={getPaginatedData(
               getDataByTab(tabName, categories, subcategories, topics, letters, users),
-              tabName
+              tabName,
+              searchQuery,
+              pagination
             ).totalPages}
             onPageChange={(page) => handlePageChange(tabName, page)}
             totalItems={getPaginatedData(
               getDataByTab(tabName, categories, subcategories, topics, letters, users),
-              tabName
+              tabName,
+              searchQuery,
+              pagination
             ).totalItems}
             itemsPerPage={pagination[tabName].itemsPerPage}
             accentColor={ACCENT[tabName] || ACCENT.categories}

@@ -71,11 +71,13 @@ export default function Login() {
         window.removeEventListener('message', handleMessage);
 
         try {
-          const res = await fetch('/api/auth/google', {
+          const res = await fetch(`${window.location.origin}/api/auth/google`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',
+            mode: 'same-origin',
             body: JSON.stringify({
               ...event.data.user,
               isLogin: true,
@@ -122,11 +124,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${window.location.origin}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'same-origin',
+        mode: 'same-origin',
         body: JSON.stringify({
           email,
           password,

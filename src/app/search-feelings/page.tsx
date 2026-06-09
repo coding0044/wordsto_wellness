@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { useContentTree } from '@/hooks/use-content';
 import Link from 'next/link';
 import PlanStatusBadge from '@/components/plan-status-badge';
+import { formatDate } from '@helpers/date';
 import {
   SEARCH_FEELINGS_LAYOUT,
   SEARCH_FEELINGS_LOADING,
@@ -15,21 +16,6 @@ import {
   SEARCH_FEELINGS_RESULTS_GRID,
   SEARCH_FEELINGS_RESULT_CARD,
 } from '@/styles/search-feelings-styles';
-
-function formatDate(value) {
-  if (!value) return '';
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    const alt = String(value).replace(' ', 'T');
-    d = new Date(alt);
-    if (isNaN(d.getTime())) {
-      const m = String(value).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
-      if (m) d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
-    }
-  }
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString();
-}
 
 function Navbar({ user }) {
   const router = useRouter();

@@ -6,6 +6,7 @@ import { useContentTree, useLettersByTopic } from '@/hooks/use-content';
 import Link from 'next/link';
 import { normalizeEntityId } from '@/lib/api-utils';
 import PlanStatusBadge from '@/components/plan-status-badge';
+import { formatDate } from '@helpers/date';
 import {
   LETTERS_VIEW_LAYOUT,
   LETTERS_VIEW_LOADING,
@@ -18,21 +19,6 @@ import {
   LETTERS_VIEW_LETTER_CARD,
   LETTERS_VIEW_LOCKED_CARD,
 } from '@/styles/letters-view-styles';
-
-function formatDate(value) {
-  if (!value) return '';
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    const alt = String(value).replace(' ', 'T');
-    d = new Date(alt);
-    if (isNaN(d.getTime())) {
-      const m = String(value).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
-      if (m) d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
-    }
-  }
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString();
-}
 
 const letterCategoryMap = {
   A: { title: 'General Confrontation Letters', borderClass: 'border-sky-500', pillClass: 'bg-sky-50 text-sky-700' },

@@ -27,6 +27,12 @@
       "@/*": [
         "src/*",
         "app/*"
+      ],
+      "@helpers/*": [
+        "helpers/*"
+      ],
+      "@helpers": [
+        "helpers/index.ts"
       ]
     }
   },

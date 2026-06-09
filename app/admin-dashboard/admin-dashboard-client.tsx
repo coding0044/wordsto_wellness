@@ -25,20 +25,10 @@ import {
 import { ADMIN_PAGES, ADMIN_ACCENT_COLORS, getAccentColor } from '@/lib/admin-dashboard-config';
 import { Routes, ApiRoutes } from '@/lib/urls';
 import { ADMIN_PAGINATION } from '@/styles';
+import { formatDate, getPageNumbers, getPaginatedData } from '@helpers/admin-dashboard';
 
 const NAV_ITEMS = ADMIN_PAGES;
 const ACCENT = ADMIN_ACCENT_COLORS;
-
-function formatDate(value: string | number | Date | null | undefined): string {
-  if (!value) return 'N/A';
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    const alt = String(value).replace(' ', 'T');
-    d = new Date(alt);
-    if (isNaN(d.getTime())) return 'N/A';
-  }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 // Pagination Component
 type PaginationProps = {
@@ -51,31 +41,7 @@ type PaginationProps = {
 };
 
 function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, accentColor }: PaginationProps) {
-  const getPageNumbers = () => {
-    const pages: Array<number | '...'> = [];
-    const maxVisible = 5;
-    
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      }
-    }
-    return pages;
-  };
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
 
   if (totalPages <= 1) return null;
 
@@ -102,7 +68,7 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           <ChevronLeft size={14} /> Prev
         </button>
         
-        {getPageNumbers().map((page, index) => (
+        {pageNumbers.map((page, index) => (
           page === '...' ? (
             <span key={`dots-${index}`} style={ADMIN_PAGINATION.ellipsis}>...</span>
           ) : (
@@ -345,27 +311,11 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
   };
 
   // Filter and paginate data
-  const getPaginatedData = (data, tab) => {
-    const filtered = data.filter(item => {
-      if (tab === 'users') return item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.email?.toLowerCase().includes(searchQuery.toLowerCase());
-      if (tab === 'letters') return item.title?.toLowerCase().includes(searchQuery.toLowerCase());
-      return item.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-    
-    const { page, itemsPerPage } = pagination[tab];
-    const start = (page - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const paginatedItems = filtered.slice(start, end);
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-    
-    return { items: paginatedItems, totalPages, totalItems: filtered.length };
-  };
-
-  const categoriesData_paginated = getPaginatedData(categories, 'categories');
-  const subcategoriesData_paginated = getPaginatedData(subcategories, 'subcategories');
-  const topicsData_paginated = getPaginatedData(topics, 'topics');
-  const lettersData_paginated = getPaginatedData(letters, 'letters');
-  const usersData_paginated = getPaginatedData(users, 'users');
+  const categoriesData_paginated = getPaginatedData(categories, 'categories', searchQuery, pagination);
+  const subcategoriesData_paginated = getPaginatedData(subcategories, 'subcategories', searchQuery, pagination);
+  const topicsData_paginated = getPaginatedData(topics, 'topics', searchQuery, pagination);
+  const lettersData_paginated = getPaginatedData(letters, 'letters', searchQuery, pagination);
+  const usersData_paginated = getPaginatedData(users, 'users', searchQuery, pagination);
 
   if (!isClient || userLoading || contentTreeLoading) return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -609,9 +559,9 @@ export default function AdminDashboard({ defaultTab = 'categories' }) {
           </div>
           <Pagination 
             currentPage={pagination[tabName].page}
-            totalPages={Math.ceil(getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName).totalPages)}
+            totalPages={Math.ceil(getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName, searchQuery, pagination).totalPages)}
             onPageChange={(page) => handlePageChange(tabName, page)}
-            totalItems={getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName).totalItems}
+            totalItems={getPaginatedData(tabName === 'users' ? users : tabName === 'letters' ? letters : tabName === 'categories' ? categories : tabName === 'subcategories' ? subcategories : topics, tabName, searchQuery, pagination).totalItems}
             itemsPerPage={pagination[tabName].itemsPerPage}
             accentColor={ACCENT[tabName] || ACCENT.categories}
           />
