@@ -133,11 +133,7 @@ function BrowseLettersContent() {
 
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
 
-  const sortedCategories = [...categories].sort((a, b) =>
-    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
-  );
-
-  const filteredCategories = sortedCategories.filter((cat) => {
+  const filteredCategories = categories.filter((cat) => {
     const name = cat.name || '';
     const desc = cat.description || '';
     return (
