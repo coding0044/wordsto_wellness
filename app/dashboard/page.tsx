@@ -201,6 +201,8 @@ function DashboardContent() {
   const [isClient, setIsClient] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const router = useRouter();
   const { data: userData, isLoading: userLoading, error: userError } = useCurrentUser();
 
@@ -223,6 +225,48 @@ function DashboardContent() {
   const handleUserUpdate = (updatedData) => {
     setUser(prev => ({ ...prev, ...updatedData }));
   };
+
+  // Fetch categories - preserve DB order (no server/client sorting)
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/api/public/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        } else {
+          console.error('Failed to fetch categories');
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
+  const preferredCategoryOrder = [
+    '6a0c6aecbcdf1dcbba76bf01',
+    '6a0c6aecbcdf1dcbba76bf02',
+    '6a0c6aecbcdf1dcbba76bf03',
+    '6a0c6aecbcdf1dcbba76bf04',
+  ];
+
+  function reorderCategories(list, order) {
+    const byId = new Map(list.map((c) => [String(c._id), c]));
+    const ordered = [];
+    order.forEach((id) => {
+      if (byId.has(id)) ordered.push(byId.get(id));
+    });
+    list.forEach((c) => {
+      if (!order.includes(String(c._id))) ordered.push(c);
+    });
+    return ordered;
+  }
+
+  const orderedCategories = reorderCategories(categories, preferredCategoryOrder);
 
   const planInfo = getUserPlanInfo(user || userData);
   const bannerTitle = getBannerTitle(planInfo);

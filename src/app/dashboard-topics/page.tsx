@@ -115,7 +115,7 @@ function TopicsContent() {
   const categoryId = currentSubcategory?.category;
 
   const sortedTopics = [...topics].sort((a, b) =>
-    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
+    String(a?._id || '').localeCompare(String(b?._id || ''))
   );
 
   const filteredTopics = sortedTopics.filter(topic =>

@@ -58,10 +58,11 @@ export async function GET(request) {
   try {
     await dbConnect();
 
-    const categories = await Category.find({}).sort({ createdAt: -1 }).lean();
-    const subcategories = await Subcategory.find({}).sort({ createdAt: -1 }).lean();
-    const topics = await Topic.find({}).sort({ createdAt: -1 }).lean();
-    const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
+    // REMOVED .sort() - Now returns in natural database order (by _id or insertion order)
+    const categories = await Category.find({}).lean();
+    const subcategories = await Subcategory.find({}).lean();
+    const topics = await Topic.find({}).lean();
+    const letters = await Letter.find({}).lean();
 
     const topicMap = {};
     topics.forEach((topic) => {

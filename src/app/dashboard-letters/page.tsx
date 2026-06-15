@@ -133,11 +133,29 @@ function BrowseLettersContent() {
 
   const categories = Array.isArray(contentTreeData) ? contentTreeData : [];
 
-  const sortedCategories = [...categories].sort((a, b) =>
-    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
-  );
+  // Preferred display order for categories (IDs shown by user)
+  const preferredCategoryOrder = [
+    '6a0c6aecbcdf1dcbba76bf01',
+    '6a0c6aecbcdf1dcbba76bf02',
+    '6a0c6aecbcdf1dcbba76bf03',
+    '6a0c6aecbcdf1dcbba76bf04',
+  ];
 
-  const filteredCategories = sortedCategories.filter((cat) => {
+  function reorderCategories(list, order) {
+    const byId = new Map(list.map((c) => [String(c._id), c]));
+    const ordered = [];
+    order.forEach((id) => {
+      if (byId.has(id)) ordered.push(byId.get(id));
+    });
+    list.forEach((c) => {
+      if (!order.includes(String(c._id))) ordered.push(c);
+    });
+    return ordered;
+  }
+
+  const orderedCategories = reorderCategories(categories, preferredCategoryOrder);
+
+  const filteredCategories = orderedCategories.filter((cat) => {
     const name = cat.name || '';
     const desc = cat.description || '';
     return (

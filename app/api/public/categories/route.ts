@@ -4,7 +4,7 @@ import Category from '@/lib/models/Category';
 import Subcategory from '@/lib/models/Subcategory';
 import Topic from '@/lib/models/Topic';
 import Letter from '@/lib/models/Letter';
-import { normalizeId } from '@/lib/api-utils';
+import { normalizeId, toSafeLowerCase, toSafeString } from '@/lib/api-utils';
 
 function normalizeCategory(category) {
   return {
@@ -59,10 +59,10 @@ export async function GET(request) {
   try {
     await dbConnect();
 
-    const categories = await Category.find({}).sort({ createdAt: -1 }).lean();
-    const subcategories = await Subcategory.find({}).sort({ createdAt: -1 }).lean();
-    const topics = await Topic.find({}).sort({ createdAt: -1 }).lean();
-    const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
+    const categories = await Category.find({}).lean();
+    const subcategories = await Subcategory.find({}).lean();
+    const topics = await Topic.find({}).lean();
+    const letters = await Letter.find({}).lean();
 
     const topicMap = {};
     topics.forEach((topic) => {

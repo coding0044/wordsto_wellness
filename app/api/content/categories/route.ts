@@ -20,7 +20,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const categories = await Category.find({}).sort({ createdAt: -1 });
+    const categories = await Category.find({});
     return NextResponse.json({ categories });
   } catch (error) {
     console.error('Error fetching categories:', error);
