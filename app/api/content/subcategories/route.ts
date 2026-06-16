@@ -38,7 +38,13 @@ export async function GET(request) {
     }
     
     if (categoryId) {
-      query.category = categoryId;
+      query = {
+        ...query,
+        $or: [
+          { categories: { $in: [categoryId] } },  // New schema: categories array
+          { categoryId: categoryId }                // Existing data: single categoryId field
+        ]
+      };
     }
     
     // Get total count for pagination
@@ -46,7 +52,7 @@ export async function GET(request) {
     
     // Get paginated subcategories
     const subcategories = await Subcategory.find(query)
-      .populate('category', 'name slug createdAt')
+      .populate('categories', 'name slug createdAt')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -85,21 +91,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { name, slug, category, description } = await request.json();
+    const { name, slug, categories, description } = await request.json();
 
-    if (!name || !category) {
-      return NextResponse.json({ error: 'Subcategory name and category are required' }, { status: 400 });
+    if (!name || !categories || !Array.isArray(categories) || categories.length === 0) {
+      return NextResponse.json({ error: 'Subcategory name and at least one category are required' }, { status: 400 });
     }
 
     const subcategory = new Subcategory({
       name: name.trim(),
       slug: slug?.trim(),
-      category,
+      categories,
       description: description?.trim(),
     });
 
     await subcategory.save();
-    await subcategory.populate('category', 'name slug createdAt');
+    await subcategory.populate('categories', 'name slug createdAt');
     return NextResponse.json({ subcategory }, { status: 201 });
   } catch (error) {
     console.error('Error creating subcategory:', error);
@@ -126,17 +132,17 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id, name, slug, category, description } = await request.json();
+    const { id, name, slug, categories, description } = await request.json();
 
-    if (!id || !name || !category) {
-      return NextResponse.json({ error: 'Subcategory ID, name, and category are required' }, { status: 400 });
+    if (!id || !name || !categories || !Array.isArray(categories) || categories.length === 0) {
+      return NextResponse.json({ error: 'Subcategory ID, name, and at least one category are required' }, { status: 400 });
     }
 
     const subcategory = await Subcategory.findByIdAndUpdate(
       id,
-      { name: name.trim(), slug: slug?.trim(), category, description: description?.trim() },
+      { name: name.trim(), slug: slug?.trim(), categories, description: description?.trim() },
       { new: true, runValidators: true }
-    ).populate('category', 'name slug createdAt');
+    ).populate('categories', 'name slug createdAt');
 
     if (!subcategory) {
       return NextResponse.json({ error: 'Subcategory not found' }, { status: 404 });
@@ -146,7 +152,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error updating subcategory:', error);
     if (error.code === 11000) {
-      return NextResponse.json({ error: 'Subcategory name already exists in this category' }, { status: 400 });
+      return NextResponse.json({ error: 'Subcategory name already exists' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

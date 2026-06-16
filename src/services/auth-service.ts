@@ -91,9 +91,15 @@ export async function resetPassword(token: string, password: string): Promise<{ 
 }
 
 export async function logout(): Promise<void> {
-  await fetchJson('/api/auth/logout', {
-    method: 'POST',
-  });
+  try {
+    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    if (!res.ok) {
+      // swallow server errors during logout to avoid breaking client flow
+      console.warn('Logout API responded with', res.status);
+    }
+  } catch (err) {
+    console.warn('Logout fetch failed', err);
+  }
 }
 
 export async function getAdminUsers(token: string): Promise<User[]> {

@@ -110,10 +110,58 @@ function SubcategoriesContent() {
   const normalizedCategoryId = normalizeEntityId(categoryId);
   const currentCategory = categories.find(c => normalizeEntityId(c) === normalizedCategoryId);
   const subcategories = currentCategory?.subcategories || [];
+  const isRelationshipCategory = currentCategory?.name?.toLowerCase().includes('relationship') || currentCategory?.slug?.toLowerCase().includes('relationship');
 
-  const sortedSubcategories = [...subcategories].sort((a, b) =>
-    (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' })
-  );
+  const normalizeRelationshipName = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/issues?$/g, '')
+      .replace(/[^a-z0-9+ ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const relationshipOrder = [
+    'abandonment',
+    'acceptance',
+    'betrayal',
+    'commitment',
+    'communication',
+    'control',
+    'counseling',
+    'trust',
+    'lgbtqia+',
+    'infidelity',
+    'intimacy',
+    'irresponsibility',
+    'reconciliation',
+    'respect',
+    'support',
+    'dependency insecurity',
+    'emotional abuse',
+    'physical abuse',
+    'domestic violence abuse',
+    'parent to teen',
+    'steparent stepchildren',
+    'parenting grandparenting',
+    'extended family',
+  ];
+
+  const sortedSubcategories = [...subcategories].sort((a, b) => {
+    if (isRelationshipCategory) {
+      const aName = normalizeRelationshipName(a?.name);
+      const bName = normalizeRelationshipName(b?.name);
+      const aIndex = relationshipOrder.indexOf(aName);
+      const bIndex = relationshipOrder.indexOf(bName);
+
+      if (aIndex !== -1 || bIndex !== -1) {
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      }
+    }
+
+    return (a?.name || '').localeCompare(b?.name || '', undefined, { sensitivity: 'base' });
+  });
 
   const filteredSubcategories = sortedSubcategories.filter(sub =>
     sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

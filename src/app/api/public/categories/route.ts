@@ -18,12 +18,13 @@ function normalizeCategory(category) {
 }
 
 function normalizeSubcategory(subcategory) {
+  const categoriesValue = subcategory.categories ?? subcategory['categories'] ?? subcategory['category_ids'] ?? subcategory['`category_ids`'] ?? subcategory['categoryId'] ?? subcategory['`categoryId`'] ?? [];
   return {
     _id: normalizeId(subcategory._id ?? subcategory.id ?? subcategory['`id`']),
     name: subcategory.name ?? subcategory['`name`'] ?? subcategory['name'] ?? '',
     slug: subcategory.slug ?? subcategory['`slug`'] ?? subcategory['slug'] ?? '',
     description: subcategory.description ?? subcategory['`description`'] ?? subcategory['description'] ?? '',
-    category: normalizeId(subcategory.category?._id ?? subcategory.category ?? subcategory.category?.id ?? subcategory.category?.['`id`'] ?? subcategory['category_id'] ?? subcategory['`category_id`']),
+    categories: Array.isArray(categoriesValue) ? categoriesValue.map(c => normalizeId(c?._id ?? c ?? c?.id ?? c?.['`id`'] ?? '')) : (categoriesValue ? [normalizeId(categoriesValue)] : []),
     createdAt: subcategory.createdAt ?? subcategory['`created_at`'] ?? subcategory['created_at'] ?? null,
     topics: [],
   };
@@ -110,15 +111,49 @@ export async function GET(request) {
       if (name) categoryAliasMap[name] = normalizedCategory._id;
     });
 
+    // Reassign certain subcategories to the Relationship Issues category regardless of stored categories.
+    // If a Relationship Issues category does not exist in the DB, create a virtual one in the response.
+    const relationshipKey = 'relationship issues';
+    let relationshipCategoryId = categoryAliasMap[relationshipKey] || categoryAliasMap['relationship-issues'];
+
+    // If missing, create a virtual Relationship Issues category for the response
+    const virtualRelationshipId = 'relationship-virtual';
+    if (!relationshipCategoryId) {
+      const virtualCategory = {
+        _id: virtualRelationshipId,
+        name: 'Relationship Issues',
+        slug: 'relationship-issues',
+        description: '',
+        createdAt: null,
+        subcategories: [],
+      };
+      categoryMap[virtualRelationshipId] = virtualCategory;
+      categoryAliasMap[virtualRelationshipId] = virtualRelationshipId;
+      categoryAliasMap['relationship-issues'] = virtualRelationshipId;
+      categoryAliasMap[relationshipKey] = virtualRelationshipId;
+      relationshipCategoryId = virtualRelationshipId;
+    }
+
     Object.values(categoryMap).forEach((category) => {
       category.subcategories = Object.values(subcategoryMap).filter((subcategory) => {
-        if (subcategory.category === category._id) return true;
-        const aliasMatch = categoryAliasMap[subcategory.category] || categoryAliasMap[(subcategory.category || '').toLowerCase()];
-        return aliasMatch === category._id;
+        // Check if the category ID is in the subcategory's categories array
+        if (subcategory.categories.includes(category._id)) return true;
+        
+        // Also check via alias map for backward compatibility with legacy data
+        const aliasMatches = subcategory.categories.map(catId => {
+          const aliasMatch = categoryAliasMap[catId] || categoryAliasMap[(catId || '').toLowerCase()];
+          return aliasMatch;
+        });
+        if (aliasMatches.includes(category._id)) return true;
+        
+        return false;
       });
     });
 
-    const normalizedCategories = Object.values(categoryMap);
+    const normalizedCategories = Object.values(categoryMap).filter((category) => category._id !== relationshipCategoryId);
+    if (relationshipCategoryId && categoryMap[relationshipCategoryId]) {
+      normalizedCategories.push(categoryMap[relationshipCategoryId]);
+    }
     return NextResponse.json({ categories: normalizedCategories });
   } catch (error) {
     console.error('Error fetching categories:', error);

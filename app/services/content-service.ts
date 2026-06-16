@@ -15,7 +15,7 @@ export interface Subcategory {
   name: string;
   slug?: string;
   description?: string;
-  category: string | Category;
+  categories: string[];
   createdAt: string;
   topics?: Topic[];
 }
@@ -50,7 +50,7 @@ export interface CreateCategoryData {
 export interface CreateSubcategoryData {
   name: string;
   description?: string;
-  category: string;
+  categories: string[];
   slug?: string;
 }
 

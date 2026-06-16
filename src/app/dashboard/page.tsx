@@ -289,7 +289,15 @@ function DashboardContent() {
     return ordered;
   }
 
-  const orderedCategories = reorderCategories(categories, preferredCategoryOrder);
+  let orderedCategories = reorderCategories(categories, preferredCategoryOrder);
+
+  // Ensure Relationship Issues always appears last in the UI regardless of DB order
+  const RELATIONSHIP_ID = '6a0c6aecbcdf1dcbba76bf01';
+  const relIndex = orderedCategories.findIndex((c) => String(c._id) === RELATIONSHIP_ID);
+  if (relIndex !== -1) {
+    const [rel] = orderedCategories.splice(relIndex, 1);
+    orderedCategories.push(rel);
+  }
 
   const planInfo = getUserPlanInfo(user || userData);
   const bannerTitle = getBannerTitle(planInfo);

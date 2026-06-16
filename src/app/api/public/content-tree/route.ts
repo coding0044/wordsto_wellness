@@ -18,12 +18,13 @@ function normalizeCategory(category) {
 }
 
 function normalizeSubcategory(subcategory) {
+  const categoriesValue = subcategory.categories ?? subcategory['categories'] ?? subcategory['category_ids'] ?? subcategory['`category_ids`'] ?? subcategory['categoryId'] ?? subcategory['`categoryId`'] ?? [];
   return {
     _id: normalizeId(subcategory._id ?? subcategory.id ?? subcategory['`id`']),
     name: subcategory.name ?? subcategory['`name`'] ?? subcategory['name'] ?? '',
     slug: subcategory.slug ?? subcategory['`slug`'] ?? subcategory['slug'] ?? '',
     description: subcategory.description ?? subcategory['`description`'] ?? subcategory['description'] ?? '',
-    category: normalizeId(subcategory.category?._id ?? subcategory.category ?? subcategory.category?.id ?? subcategory.category?.['`id`'] ?? subcategory['category_id'] ?? subcategory['`category_id`']),
+    categories: Array.isArray(categoriesValue) ? categoriesValue.map(c => normalizeId(c?._id ?? c ?? c?.id ?? c?.['`id`'] ?? '')) : (categoriesValue ? [normalizeId(categoriesValue)] : []),
     createdAt: subcategory.createdAt ?? subcategory['`created_at`'] ?? subcategory['created_at'] ?? null,
     topics: [],
   };
@@ -145,9 +146,17 @@ export async function GET(request) {
 
     Object.values(categoryMap).forEach((category) => {
       category.subcategories = Object.values(subcategoryMap).filter((subcategory) => {
-        if (subcategory.category === category._id) return true;
-        const aliasMatch = categoryAliasMap[subcategory.category] || categoryAliasMap[toSafeLowerCase(subcategory.category)];
-        return aliasMatch === category._id;
+        // Check if the category ID is in the subcategory's categories array
+        if (subcategory.categories.includes(category._id)) return true;
+        
+        // Also check via alias map for backward compatibility with legacy data
+        const aliasMatches = subcategory.categories.map(catId => {
+          const aliasMatch = categoryAliasMap[catId] || categoryAliasMap[toSafeLowerCase(catId)];
+          return aliasMatch;
+        });
+        if (aliasMatches.includes(category._id)) return true;
+        
+        return false;
       });
     });
 

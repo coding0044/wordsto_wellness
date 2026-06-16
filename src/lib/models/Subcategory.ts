@@ -10,10 +10,10 @@ const SubcategorySchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
+  categories: {
+    type: [mongoose.Schema.Types.ObjectId],
     ref: 'Category',
-    required: [true, 'Please provide a category'],
+    required: [true, 'Please provide at least one category'],
   },
   description: {
     type: String,
@@ -25,8 +25,10 @@ const SubcategorySchema = new mongoose.Schema({
   },
 });
 
-// Compound index to ensure unique subcategory names within a category
-SubcategorySchema.index({ name: 1, category: 1 }, { unique: true });
+// Ensure name is unique across all categories
+SubcategorySchema.index({ name: 1 }, { unique: true });
+// Create an index for faster category lookups
+SubcategorySchema.index({ categories: 1 });
 
 // Clear existing model to prevent cache issues
 const Subcategory = mongoose.models.Subcategory || mongoose.model('Subcategory', SubcategorySchema);
