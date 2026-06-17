@@ -78,5 +78,7 @@ const LetterSchema = new mongoose.Schema({
   },
 });
 
+LetterSchema.index({ createdAt: -1 });
+
 const Letter = mongoose.models.Letter || mongoose.model('Letter', LetterSchema);
 export default Letter;
