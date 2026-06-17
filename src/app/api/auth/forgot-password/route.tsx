@@ -19,12 +19,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify().then(() => {
-  console.log('✅ SMTP transporter initialized successfully');
-}).catch((err) => {
-  console.error('❌ SMTP transporter verification failed:', err);
-});
-
 async function sendOTPEmail(email, otp, name) {
   const mailOptions = {
     from: `"wordstowellness" <${emailUser}>`,
