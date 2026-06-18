@@ -2,6 +2,16 @@ let pipeline: any = null;
 
 async function getEmbeddingPipeline() {
   if (!pipeline) {
+    try {
+      const mod = await import('@xenova/transformers');
+      if (mod && mod.env && mod.env.backends && mod.env.backends.onnx && mod.env.backends.onnx.wasm) {
+        mod.env.backends.onnx.wasm.wasmPaths = '/onnx/';
+        mod.env.allowRemoteModels = true;
+      }
+    } catch (e) {
+      console.warn('Could not configure transformers WASM env:', e);
+    }
+
     const { pipeline: createPipeline } = await import('@xenova/transformers');
     pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
   }
@@ -94,8 +104,22 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     }
   }
 
-  const pipe = await getEmbeddingPipeline();
-  const output = await pipe(input, { pooling: 'mean', normalize: true });
+  let output: unknown;
+  try {
+    const pipe = await getEmbeddingPipeline();
+    output = await pipe(input, { pooling: 'mean', normalize: true });
+  } catch (err: any) {
+    const msg = String(err?.message || err);
+    if (msg.includes('libonnxruntime') || msg.includes('onnxruntime-node')) {
+      console.error(msg);
+      throw new Error(
+        'Local ONNX runtime failed to load (missing native library). On Vercel/serverless environments this can occur because native libs are not available.\n' +
+          'Recommended fixes: set `OPENAI_API_KEY` in your Vercel environment to use OpenAI embeddings, or use a different embedding provider.'
+      );
+    }
+    throw err;
+  }
+
   const embedding = normalizeEmbedding(output);
 
   if (embedding.length === 0) {
