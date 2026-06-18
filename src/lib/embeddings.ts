@@ -1,10 +1,23 @@
-import { pipeline } from '@xenova/transformers';
+
 let pipeline: any = null;
 
 async function getEmbeddingPipeline() {
   if (!pipeline) {
-    const { pipeline: createPipeline } = await import('@xenova/transformers');
-    pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    try {
+      const { pipeline: createPipeline } = await import('@xenova/transformers');
+      pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    } catch (err: any) {
+      // Provide a clearer error when the native ONNX runtime is missing (common on serverless hosts)
+      const msg = String(err?.message || err);
+      if (msg.includes('libonnxruntime') || msg.includes('onnxruntime-node')) {
+        throw new Error(
+          'Local ONNX runtime failed to load (missing native library). On Vercel/serverless environments this can occur because native libs are not available.\n' +
+            'Recommended fixes: set `OPENAI_API_KEY` in your Vercel environment to use OpenAI embeddings, or configure Transformers.js to use the WASM backend (onnxruntime-web).'
+        );
+      }
+
+      throw err;
+    }
   }
   return pipeline;
 }
@@ -95,8 +108,19 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     }
   }
 
-  const pipe = await getEmbeddingPipeline();
-  const output = await pipe(input, { pooling: 'mean', normalize: true });
+  let output: unknown;
+  try {
+    const pipe = await getEmbeddingPipeline();
+    output = await pipe(input, { pooling: 'mean', normalize: true });
+  } catch (err: any) {
+    // If pipeline creation failed due to missing native libs, surface a helpful message
+    const msg = String(err?.message || err);
+    if (msg.includes('Local ONNX runtime failed to load')) {
+      console.error(msg);
+      throw new Error(msg + ' Ensure `OPENAI_API_KEY` is set in production or switch to the WASM backend.');
+    }
+    throw err;
+  }
   const embedding = normalizeEmbedding(output);
 
   if (embedding.length === 0) {
