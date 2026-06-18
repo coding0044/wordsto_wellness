@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "copy-onnx-wasm": "node scripts/copy-onnx-wasm.js",
-    "postinstall": "node scripts/copy-onnfx-wasm.js"
+    "postinstall": "node scripts/copy-onnx-wasm.js"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.99.2",
