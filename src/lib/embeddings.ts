@@ -1,3 +1,4 @@
+import { pipeline } from '@xenova/transformers';
 let pipeline: any = null;
 
 async function getEmbeddingPipeline() {
