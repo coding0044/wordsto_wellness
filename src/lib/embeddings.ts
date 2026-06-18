@@ -4,6 +4,20 @@ let pipeline: any = null;
 async function getEmbeddingPipeline() {
   if (!pipeline) {
     try {
+      // Try to configure Transformers.js to use the WASM ONNX backend first.
+      // This will point the library to the WASM assets served from `/onnx/`.
+      try {
+        const mod = await import('@xenova/transformers');
+        if (mod && mod.env && mod.env.backends && mod.env.backends.onnx && mod.env.backends.onnx.wasm) {
+          mod.env.backends.onnx.wasm.wasmPaths = '/onnx/';
+          // prefer remote models when using wasm; optional
+          mod.env.allowRemoteModels = true;
+        }
+      } catch (e) {
+        // Non-fatal: if we can't configure env, proceed and handle import errors below
+        console.warn('Could not configure transformers WASM env:', e);
+      }
+
       const { pipeline: createPipeline } = await import('@xenova/transformers');
       pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
     } catch (err: any) {
