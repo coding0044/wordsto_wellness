@@ -280,19 +280,35 @@ function SearchByFeelingsPage() {
                 const category = getLetterCategory(letter.letter_type);
                 const level = getLetterLevel(letter.level);
                 return (
-                  <div key={letter._id} className={`bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition flex flex-col border-l-8 ${category.borderClass}`}>
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <span className={`text-sm font-semibold px-2.5 py-1 rounded-full ${category.pillClass}`}>{category.title}</span>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${level.badgeClass}`}>{level.label}</span>
+                  <div key={letter._id} className={`rounded-[2rem] border border-sky-200/70 bg-white shadow-[0_12px_40px_rgba(56,189,248,0.12)] hover:-translate-y-1 transform transition duration-200 flex flex-col p-6 ${category.borderClass}`}>
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <span className={`text-sm font-semibold px-3 py-2 rounded-full ${category.pillClass}`}>{category.title}</span>
+                      <span className={`text-xs font-semibold px-3 py-2 rounded-full ${level.badgeClass}`}>{level.label}</span>
                     </div>
-                    <h2 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">{letter.title}</h2>
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-3 flex-1">{letter.content || 'No content available.'}</p>
-                    <div className="border-t border-gray-50 pt-3 mt-auto">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span>Relevance</span>
-                        <span>{letter.topic?.name || ''}</span>
+                    <div className="mb-4">
+                      <h2 className="text-lg font-semibold text-slate-900 leading-snug line-clamp-2">{letter.title}</h2>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-6 line-clamp-4 leading-relaxed break-words">{letter.content || 'No content available.'}</p>
+                    <div className="mt-auto border-t border-slate-100 pt-4">
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                        <div className="inline-flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {formatDate(letter.createdAt)}
+                        </div>
+                        <span className="text-slate-500">{letter.topic?.name || ''}</span>
                       </div>
-                      <RelevanceBar score={letter.score} />
+                      <div className="flex items-center justify-between">
+                        <RelevanceBar score={letter.score} />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLetter(letter)}
+                          className="text-sky-600 font-semibold text-sm hover:text-sky-800 transition"
+                        >
+                          Read Full Letter →
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
