@@ -1,8 +1,3 @@
-import { Pipeline } from '@xenova/transformers';
-
-// Use a promise to handle race conditions
-let pipelinePromise: Promise<Pipeline> | null = null;
-let pipeline: Pipeline | null = null;
 
 // Cache for embeddings
 const embeddingCache = new Map<string, { embedding: number[]; timestamp: number }>();
@@ -15,46 +10,6 @@ let openAIKeyStatus: { valid: boolean; lastChecked: number; rateLimitedUntil: nu
   rateLimitedUntil: 0,
 };
 
-async function getEmbeddingPipeline(): Promise<Pipeline> {
-  if (pipeline) return pipeline;
-  
-  if (!pipelinePromise) {
-    pipelinePromise = (async () => {
-      try {
-        // Try to configure Transformers.js to use the WASM ONNX backend first.
-        try {
-          const mod = await import('@xenova/transformers');
-          if (mod?.env?.backends?.onnx?.wasm) {
-            mod.env.backends.onnx.wasm.wasmPaths = '/onnx/';
-            mod.env.allowRemoteModels = true;
-            mod.env.localModelPath = '/models/';
-          }
-        } catch (e) {
-          console.warn('Could not configure transformers WASM env:', e);
-        }
-
-        const { pipeline: createPipeline } = await import('@xenova/transformers');
-        pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        return pipeline;
-      } catch (err: any) {
-        pipelinePromise = null; // Reset on failure so next attempt can retry
-        const msg = String(err?.message || err);
-        
-        if (msg.includes('libonnxruntime') || msg.includes('onnxruntime-node')) {
-          throw new Error(
-            'Local ONNX runtime failed to load (missing native library). ' +
-            'On Vercel/serverless environments this can occur because native libs are not available.\n' +
-            'Recommended fixes: set `OPENAI_API_KEY` in your Vercel environment to use OpenAI embeddings, ' +
-            'or configure Transformers.js to use the WASM backend (onnxruntime-web).'
-          );
-        }
-        throw err;
-      }
-    })();
-  }
-  
-  return pipelinePromise;
-}
 
 function isTypedArray(value: unknown): value is ArrayBufferView {
   return (
@@ -239,23 +194,6 @@ async function generateOpenAIEmbedding(text: string, apiKey: string): Promise<nu
   }
 }
 
-async function generateLocalEmbedding(text: string): Promise<number[]> {
-  const pipe = await getEmbeddingPipeline();
-  const output = await pipe(text, { pooling: 'mean', normalize: true });
-  const embedding = normalizeEmbedding(output);
-  
-  if (!validateEmbedding(embedding)) {
-    console.error('Local embedding normalization failed', {
-      outputType: typeof output,
-      outputSample: Array.isArray(output) ? output.slice(0, 5) : output,
-      normalizedLength: embedding.length,
-    });
-    throw new Error('Local embedding model returned no valid embedding');
-  }
-  
-  return embedding;
-}
-
 export async function generateEmbedding(text: string): Promise<number[]> {
   const input = String(text || '').trim();
   if (!input) {
@@ -268,96 +206,22 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     return cached.embedding;
   }
 
-  let embedding: number[] = [];
-  let usedOpenAI = false;
-
-  // Try OpenAI first if key is available
   const openAiKey = process.env.OPENAI_API_KEY?.trim();
-  const useLocalModel = process.env.USE_LOCAL_MODEL !== 'false';
-
-  // Check if we should try OpenAI
-  let shouldTryOpenAI = false;
-  if (openAiKey) {
-    const now = Date.now();
-    if (now < openAIKeyStatus.rateLimitedUntil) {
-      console.warn(
-        `Skipping OpenAI because the key is rate-limited until ${new Date(openAIKeyStatus.rateLimitedUntil).toISOString()}`
-      );
-    } else {
-      const keyCheckAge = now - openAIKeyStatus.lastChecked;
-      if (openAIKeyStatus.valid || keyCheckAge > 300000) { // Re-check every 5 minutes
-        shouldTryOpenAI = true;
-      } else {
-        console.warn('Skipping OpenAI (key previously invalid, waiting for re-check)');
-      }
-    }
-  }
-
-  if (!openAiKey && !useLocalModel) {
+  if (!openAiKey) {
     throw new Error(
-      'No embedding service is configured. Set OPENAI_API_KEY in environment variables or enable the local model with USE_LOCAL_MODEL=true.'
+      'OpenAI API key is required. Set OPENAI_API_KEY in your environment variables to use embeddings.'
     );
   }
 
-  if (shouldTryOpenAI) {
-    try {
-      embedding = await generateOpenAIEmbedding(input, openAiKey);
-      usedOpenAI = true;
-    } catch (err) {
-      const error = err as Error;
-      const errorMsg = error.message || '';
-      
-      // Log specific error types
-      if (errorMsg.includes('Invalid OpenAI API key')) {
-        console.error('OpenAI API key is invalid. Please check your environment variables.');
-      } else if (errorMsg.includes('rate limit')) {
-        console.warn('OpenAI rate limit hit, falling back to local model');
-      } else {
-        console.error('OpenAI embedding failed, falling back to local model:', errorMsg);
-      }
-      
-      // Don't fallback if it's a key validation error (we know it won't work)
-      if (errorMsg.includes('Invalid OpenAI API key')) {
-        // Skip fallback and try local directly
-        embedding = [];
-      }
-    }
-  }
-
-  // Fall back to local model if OpenAI failed or not available
+  const embedding = await generateOpenAIEmbedding(input, openAiKey);
   if (embedding.length === 0) {
-    if (!useLocalModel) {
-      throw new Error(
-        'OpenAI embeddings are unavailable and the local model is disabled. ' +
-        'Set OPENAI_API_KEY or enable the local model with USE_LOCAL_MODEL=true.'
-      );
-    }
-
-    try {
-      embedding = await generateLocalEmbedding(input);
-    } catch (err) {
-      const error = err as Error;
-      const msg = String(error?.message || err);
-      
-      // Provide helpful error messages
-      if (msg.includes('Local ONNX runtime failed to load')) {
-        throw new Error(
-          `Local embedding model failed: ${msg}. ` +
-          `Please set OPENAI_API_KEY in your environment or install the WASM backend.`
-        );
-      } else {
-        throw error;
-      }
-    }
+    throw new Error('OpenAI embedding returned no valid vector.');
   }
 
-  // Cache the result
-  if (embedding.length > 0) {
-    embeddingCache.set(input, {
-      embedding,
-      timestamp: Date.now(),
-    });
-  }
+  embeddingCache.set(input, {
+    embedding,
+    timestamp: Date.now(),
+  });
 
   return embedding;
 }
@@ -516,26 +380,11 @@ export async function healthCheck(): Promise<{
     }
   }
   
-  // Check local model
-  try {
-    const useLocalModel = process.env.USE_LOCAL_MODEL !== 'false';
-    if (useLocalModel) {
-      const pipe = await getEmbeddingPipeline();
-      result.local.available = !!pipe;
-    }
-  } catch (err) {
-    result.local.available = false;
-    if (!result.openAI.valid) {
-      result.status = 'unhealthy';
-      result.details = 'Neither OpenAI nor local model is available';
-    }
-  }
-  
-  if (!result.openAI.valid && !result.local.available) {
+  if (!result.openAI.valid) {
     result.status = 'unhealthy';
-    result.details = 'No embedding method available';
+    result.details = 'OpenAI is not available';
   }
-  
+
   return result;
 }
 
@@ -561,14 +410,4 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
 export function isOpenAIConfigured(): boolean {
   const key = process.env.OPENAI_API_KEY?.trim();
   return !!(key && isValidOpenAIKey(key));
-}
-
-// Export helper to check if local model is available
-export async function isLocalModelAvailable(): Promise<boolean> {
-  try {
-    const pipe = await getEmbeddingPipeline();
-    return !!pipe;
-  } catch {
-    return false;
-  }
 }
