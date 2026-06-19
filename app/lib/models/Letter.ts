@@ -33,6 +33,8 @@ const LetterSchema = new mongoose.Schema({
   },
 });
 
+LetterSchema.index({ createdAt: -1 });
+
 // Clear existing model to prevent cache issues
 const Letter = mongoose.models.Letter || mongoose.model('Letter', LetterSchema);
 export default Letter;

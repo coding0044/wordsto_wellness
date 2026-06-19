@@ -61,7 +61,7 @@ export async function GET(request) {
     const categories = await Category.find({}).sort({ createdAt: -1 }).lean();
     const subcategories = await Subcategory.find({}).sort({ createdAt: -1 }).lean();
     const topics = await Topic.find({}).sort({ createdAt: -1 }).lean();
-    const letters = await Letter.find({}).sort({ createdAt: -1 }).lean();
+    const letters = await Letter.find({}).lean();
 
     const topicMap = {};
     const topicAliasMap = {};
