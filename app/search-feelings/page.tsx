@@ -72,9 +72,16 @@ function RelevanceBar({ score }: { score: number }) {
       <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs text-gray-400 w-8 text-right">{pct}%</span>
+      <span className="text-xs text-gray-400 w-12 text-right">{pct}%</span>
     </div>
   );
+}
+
+function formatDate(value: string | undefined) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' });
 }
 
 const letterCategoryMap = {
@@ -110,6 +117,7 @@ function SearchByFeelingsPage() {
   const [isClient, setIsClient] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedLetter, setSelectedLetter] = useState<SearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
@@ -296,20 +304,60 @@ function SearchByFeelingsPage() {
                       <span className={`text-sm font-semibold px-2.5 py-1 rounded-full ${category.pillClass}`}>{category.title}</span>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${level.badgeClass}`}>{level.label}</span>
                     </div>
-                    <h2 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">{letter.title}</h2>
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-3 flex-1">{letter.content || 'No content available.'}</p>
-                    <div className="border-t border-gray-50 pt-3 mt-auto">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span>Relevance</span>
-                        <span>{letter.topic?.name || ''}</span>
-                      </div>
+                    <div className="mb-3">
+                      <h2 className="text-base font-semibold text-slate-900 line-clamp-2">{letter.title}</h2>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-5 line-clamp-4 break-words">{letter.content || 'No content available.'}</p>
+
+                    <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                      <span className="inline-flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {formatDate(letter.createdAt)}
+                      </span>
+                      <span className="text-sky-600 font-medium">{letter.topic?.name || ''}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
                       <RelevanceBar score={letter.score} />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLetter(letter)}
+                        className="text-sky-600 font-semibold text-sm hover:text-sky-700 transition"
+                      >
+                        Read Full Letter →
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
           </>
+        )}
+        {selectedLetter && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedLetter(null)}>
+            <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedLetter.title}</h2>
+                  <p className="text-sm text-gray-500 mt-2">{selectedLetter.topic?.name || getLetterCategory(selectedLetter.letter_type).title}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedLetter(null)}
+                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
+                  aria-label="Close full letter"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-90px)] prose prose-slate max-w-none text-gray-700">
+                <div className="whitespace-pre-wrap">{selectedLetter.content}</div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
