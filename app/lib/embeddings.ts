@@ -214,8 +214,15 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     return [];
   }
 
-  // Try OpenAI first if API key is available (preferred for production)
   const openAiKey = process.env.OPENAI_API_KEY?.trim();
+  const useLocalModel = process.env.USE_LOCAL_MODEL !== 'false';
+
+  if (!openAiKey && !useLocalModel) {
+    throw new Error(
+      'No embedding service is configured. Set OPENAI_API_KEY in environment variables or enable the local model with USE_LOCAL_MODEL=true.'
+    );
+  }
+
   if (openAiKey) {
     try {
       console.log('Generating embedding using OpenAI...');
@@ -228,7 +235,13 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     }
   }
 
-  // Fallback to local embedding
+  if (!useLocalModel) {
+    throw new Error(
+      'OpenAI embeddings failed and local model is disabled. ' +
+      'Set OPENAI_API_KEY or enable local model with USE_LOCAL_MODEL=true.'
+    );
+  }
+
   console.log('Generating embedding using local model...');
   return generateLocalEmbedding(input);
 }

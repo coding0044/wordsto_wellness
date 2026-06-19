@@ -273,7 +273,8 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   // Try OpenAI first if key is available
   const openAiKey = process.env.OPENAI_API_KEY?.trim();
-  
+  const useLocalModel = process.env.USE_LOCAL_MODEL !== 'false';
+
   // Check if we should try OpenAI
   let shouldTryOpenAI = false;
   if (openAiKey) {
@@ -290,6 +291,12 @@ export async function generateEmbedding(text: string): Promise<number[]> {
         console.warn('Skipping OpenAI (key previously invalid, waiting for re-check)');
       }
     }
+  }
+
+  if (!openAiKey && !useLocalModel) {
+    throw new Error(
+      'No embedding service is configured. Set OPENAI_API_KEY in environment variables or enable the local model with USE_LOCAL_MODEL=true.'
+    );
   }
 
   if (shouldTryOpenAI) {
@@ -319,14 +326,14 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   // Fall back to local model if OpenAI failed or not available
   if (embedding.length === 0) {
+    if (!useLocalModel) {
+      throw new Error(
+        'OpenAI embeddings are unavailable and the local model is disabled. ' +
+        'Set OPENAI_API_KEY or enable the local model with USE_LOCAL_MODEL=true.'
+      );
+    }
+
     try {
-      // Check if we should use local model
-      const useLocalModel = process.env.USE_LOCAL_MODEL !== 'false';
-      
-      if (!useLocalModel) {
-        throw new Error('Local model disabled by USE_LOCAL_MODEL=false');
-      }
-      
       embedding = await generateLocalEmbedding(input);
     } catch (err) {
       const error = err as Error;
@@ -337,10 +344,6 @@ export async function generateEmbedding(text: string): Promise<number[]> {
         throw new Error(
           `Local embedding model failed: ${msg}. ` +
           `Please set OPENAI_API_KEY in your environment or install the WASM backend.`
-        );
-      } else if (msg.includes('disabled by USE_LOCAL_MODEL')) {
-        throw new Error(
-          'No embedding method available. Please set OPENAI_API_KEY or enable local model with USE_LOCAL_MODEL=true'
         );
       } else {
         throw error;
