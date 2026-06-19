@@ -1,3 +1,18 @@
+// let pipeline: any = null;
+
+// async function getEmbeddingPipeline() {
+//   if (!pipeline) {
+//     const { pipeline: createPipeline } = await import('@xenova/transformers');
+//     pipeline = await createPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+//   }
+//   return pipeline;
+// }
+import { env } from '@xenova/transformers';
+
+// Force WASM backend for serverless/Vercel compatibility
+env.backends.onnx.wasm.numThreads = 1;
+env.allowLocalModels = false;
+
 let pipeline: any = null;
 
 async function getEmbeddingPipeline() {
@@ -7,7 +22,6 @@ async function getEmbeddingPipeline() {
   }
   return pipeline;
 }
-
 export async function generateEmbedding(text: string): Promise<number[]> {
   const pipe = await getEmbeddingPipeline();
   const output = await pipe(text, { pooling: 'mean', normalize: true });
